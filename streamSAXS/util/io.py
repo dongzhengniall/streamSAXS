@@ -33,20 +33,25 @@ class IoHdf5(object):
         return data
 
     @staticmethod
-    def Save_H5_data(file_name, dataset_name, dataset_value, data_length=None):
+    def Save_H5_data(file_name, dataset_name, dataset_value, data_set_type=None, data_length=None, end=None,save_length=None):
         if os.path.exists(file_name):
             f = h5py.File(file_name, 'a')
         else:
             f = h5py.File(file_name, 'w')
         if dataset_name not in f:
-            dataset = f.create_dataset(dataset_name, [dataset_value.shape[0], dataset_value.shape[1]], chunks=True, maxshape=[None, dataset_value.shape[1]])
-            dataset[0:dataset_value.shape[0]] = dataset_value
+            if data_set_type == "attri":
+                dataset = f.create_dataset(dataset_name, [data_length], dtype='S10',chunks=True)
+            elif len(dataset_value.shape) == 2:
+                dataset = f.create_dataset(dataset_name, [data_length, dataset_value.shape[1]],
+                                           chunks=True)
+            else:
+                dataset = f.create_dataset(dataset_name, [data_length, dataset_value.shape[1], dataset_value.shape[2]],
+                                           chunks=True)
+        dataset = f[dataset_name]
+        if data_set_type == "attri":
+            dataset[end-save_length+1:end+1] = dataset_value
         else:
-            dataset = f[dataset_name]
-            len_now_start = dataset.shape[0]
-            len_now_end = len_now_start + dataset_value.shape[0]
-            dataset.resize((len_now_end, dataset_value.shape[1]))
-            dataset[len_now_start:len_now_end] = dataset_value
+            dataset[end-save_length+1:end+1] = dataset_value
         f.close()
 
 

@@ -82,14 +82,19 @@ class PreRecon():
         MlData = np.log(np.max(data)/data)
         return MlData
 
-def GenSino(X, Y, data, num ):
+def GenSino(X, Y, data ,sino):
     label = False
-    sino = np.zeros([X, Y])
-    if num == 1:
+    if sino is None :
+        sino = np.zeros([X, Y])
+        sino[np.isnan(sino)] = np.nan
+        print(sino)
+
+    num = np.count_nonzero(~np.isnan(data))
+    if num == 0:
         sino[0,0] = data
     else :
-        pos_x = (num-1)//X
-        pos_y = (num-1)%X
+        pos_x = (num)//X
+        pos_y = (num)%X
         sino[pos_x,pos_y] = data
 
     if num  == X*Y:
@@ -328,7 +333,7 @@ class Recon_parallel():
         sino_corr = sino_corr[0,:,:]
 
         # print(nx,ny,nz)
-        Angles = np.linspace(self.AngleScale, 0, nx, False)
+        Angles = np.linspace(0,self.AngleScale, num=nx, endpoint=True)
 
         proj_geom = astra.creators.create_proj_geom('parallel', 1.0, ny,  Angles)
         vol_geom = astra.creators.create_vol_geom(ny, ny)
@@ -358,6 +363,16 @@ class Recon_parallel():
 
         astra.algorithm.delete(alg_id)
         return rec_RL#*mask[0,:,:]
+
+
+
+# def Recon_parallel_Tomopy(sino, theta, center, algorithm, num_iter):
+#     nx, ny = np.shape(sino)
+#     # print(nx,ny)
+#     sino = sino.reshape([nx,-1,ny])
+#     slice = tomopy.recon(sino, theta, center=center, algorithm=algorithm, num_iter=num_iter)
+#
+#     return  slice[0,:,:]
 
 #########################################
 ############ Filter  #############

@@ -34,7 +34,7 @@ class SinglePeakFit(ProcessingFunction):
 
         self._params_dict['autoFit'] = {'type': 'bool', 'value': True, 'text': 'Auto Fitting',
                                         'tip': "If selected, initial values of fitting parameters aren't necessarily given. If not selected, values are required."}
-        self._params_dict['x_range'] = {'type': 'tuple_float', 'value': (0.28,0.32), 'text': 'x range',
+        self._params_dict['x_range'] = {'type': 'tuple_float', 'value': None, 'text': 'x range',
                                         'tip': '(min,max)'}
         self._params_dict['peak_type'] = {'type': 'enum', 'value': SinglePeakFit_PeakType.type1, 'text': 'Peak Type'}
         self._params_dict['peak_center'] = {'type': 'float', 'value': None, 'text': 'Peak Center'}
@@ -77,7 +77,9 @@ class SinglePeakFit(ProcessingFunction):
         self.set_param('d', result['d'])
         # self.set_param('n', result['n'])
         # print(yfit)
-        data['peakfit']= result
+        data['peakfit'] = result
+        # data['peakfit']={'PeakPos':result['peak_center'] , 'PeakArea' : result['area'],
+        #                  'PeakFWHM':result['fwhm']}
 
         return {'data': data,
                 "plot": {"type": "1DP",
@@ -87,6 +89,9 @@ class SinglePeakFit(ProcessingFunction):
                                    "x":x,"y":yfit}],
                          'label': {'xlabel': 'q', 'ylabel': 'Intensity'}},
                 'num_value': result}
+
+
+
 
 
     def param_validation(self):
@@ -102,8 +107,6 @@ class SinglePeakFit_PeakType(Enum):
     type1 = "Gaussian+LinearBg"
     type2 = "Lorentz+LinearBg"
     type3 = "Vogit+LinearBg"
-
-
 
 
 class TParameters(ProcessingFunction):
@@ -147,17 +150,43 @@ class SinglePeakFitPlot(ProcessingFunction):
 
     def __init__(self):
         super().__init__()
+        self._params_dict["plotLable"] = {"type": "enum", "value": SinglePeakFitPlot_Type.unit1,
+                                          "text": "Interest data"}
 
     def run_function(self, data, label):
 
-        peaks = data['peakfit']['peak_center']
+        unit = 'peak_center'
+        if self.get_param_value("sinoLable") == SinglePeakFitPlot_Type.unit1:
+            unit = 'peak_center'
+        if self.get_param_value("sinoLable") == SinglePeakFitPlot_Type.unit2:
+            unit = 'area'
+        if self.get_param_value("sinoLable") == SinglePeakFitPlot_Type.unit3:
+            unit = 'fwhm'
+        if self.get_param_value("sinoLable") == SinglePeakFitPlot_Type.unit4:
+            unit = 'peak_intensity_max'
+        if self.get_param_value("sinoLable") == SinglePeakFitPlot_Type.unit5:
+            unit = 'PeakInt'
+        if unit ==  'PeakInt':
+            plotdata = data['PeakInt']
+        else:
+
+            plotdata = data['peakfit'][unit]
+
 
         return {'data': data,
                 "plot": {"type": "2DP",
-                         "data": {'value': peaks},
-                         'title': '2 Theta'}
+                         "data": {'value': plotdata},
+                         'title': unit}
                 }
 
+
+@unique
+class SinglePeakFitPlot_Type(Enum):
+    unit1 = 'PeakPos'
+    unit2 = 'PeakArea'
+    unit3 = 'PeakFWHM'
+    unit4 = 'PeakIntensity'
+    unit5 = 'ROIPeakIntensity'
 
 class SinglePeakFit2D(ProcessingFunction):
     function_text = 'Single Peak Fitting 2D'
@@ -186,3 +215,25 @@ class SinglePeakFit2D(ProcessingFunction):
 @unique
 class SinglePeakFit2D_PeakType(Enum):
     type1 = "Gaussian"
+
+
+class ROIPeak(ProcessingFunction):
+    function_text = 'ROI Peak Intensity'
+    function_tip = 'ROI Peak Intensity'
+
+    def __init__(self):
+        super().__init__()
+        self._params_dict['ROI_range'] = {'type': 'tuple_float', 'value': (14, 16), 'text': 'ROI range',
+                                        'tip': '(min,max) '}
+
+    def run_function(self,  data, label):
+
+        PeakInt = bf.ROIPeak ( data['x'],data['y'], self.get_param_value('ROI_range'))
+
+        data['PeakInt'] = PeakInt
+        #
+        return {'data': data,
+                "plot": {"type": "2DP",
+                         "data": {'value':PeakInt},
+                         'title': 'ROI Peak intensity'}
+                }

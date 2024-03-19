@@ -131,7 +131,7 @@ class Blur(ProcessingFunction):
 
 
 
-class GuassianBlur(ProcessingFunction):
+class GaussianBlur(ProcessingFunction):
     """
     DESCRIPTION:GuassianBlur filter
     Parameters:
@@ -139,8 +139,8 @@ class GuassianBlur(ProcessingFunction):
     Returns:
     """
 
-    function_text = "GuassianBlur"
-    function_tip = "GuassianBlur filter"
+    function_text = "GaussianBlur"
+    function_tip = "GaussianBlur filter"
 
     def __init__(self):
         super().__init__()
@@ -266,8 +266,8 @@ class BilateralFilter(ProcessingFunction):
     Returns:
     """
 
-    function_text = "BilateralFilter"
-    function_tip = "BilateralFilter filter"
+    function_text = "Bilateral"
+    function_tip = "Bilateral filter"
 
     def __init__(self):
         super().__init__()

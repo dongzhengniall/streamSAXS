@@ -29,16 +29,25 @@ class CurveCrop(ProcessingFunction):
         #self.isData1D()
         x=data['x']
         y=data['y']
-        
-        if self.get_params_dict["start"]!=None and self.get_params_dict["end"]!=None:
-            x=x[self.get_params_dict["start"]:self.get_params_dict["end"]]
-        if self.get_params_dict["start"]!=None and self.get_params_dict["end"]==None:
-            x=x[self.get_params_dict["start"]:]
-        if self.get_params_dict["start"]==None and self.get_params_dict["end"]!=None:
-            x=x[0:self.get_params_dict["end"]]            
+
+        x,y=bf.curveCrop(x,y,self.get_param_value("start"),self.get_param_value("end"))
+
+        '''
+        if self.get_param_value["start"]!=None and self.get_params_value["end"]!=None:
+            x = x[self.get_params_value["start"]:self.get_params_value["end"]]
+            y = y[self.get_params_value["start"]:self.get_params_value["end"]]
+        if self.get_params_dict["start"]!=None and self.get_params_value["end"]==None:
+            x = x[self.get_params_value["start"]:]
+            y = y[self.get_params_value["start"]:]
+        if self.get_params_value["start"]==None and self.get_params_value["end"]!=None:
+            x = x[0:self.get_params_value["end"]]
+            y = y[0:self.get_params_value["end"]]
+        '''
         
         return {"data":{'x':x,'y':y},
-                "plot":{'x':x,'y':y,'type':'1DV'}
+                "plot":{'data':{'x':x,'y':y},
+                        'type':'1DP'
+                        }
                 }
         
     def param_validation(self):

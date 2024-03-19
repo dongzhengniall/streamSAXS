@@ -17,9 +17,11 @@ from PyQt5.QtGui import QIcon, QColor, QBrush
 from PyQt5.QtCore import Qt, QSize, pyqtSignal
 
 from dialogs.select_file_dialog import Select_file_dialog
+from dialogs.select_1d_file_dialog import Select_1D_file_dialog
 from plugin.Calibration import DetectorCalibrationPyFAI
 from plugin.IO import LoadH5Data
 from util.io import IoHdf5, IoFile
+from util.plan_manager import PlanManager
 from util.processing_sequence import ProcessingSequence
 from ui.ui_processing_widget import Ui_processing_widget
 
@@ -55,6 +57,7 @@ class Runthread(QtCore.QThread):
         try:
             if self.init_flag:
                 data_length = None
+                self.save_path = []
                 self.tiff_image_path = []
                 for i, process in enumerate(self.processing_list):
                     if self.data_in_memory[i] is None:
@@ -63,25 +66,40 @@ class Runthread(QtCore.QThread):
                     param_dict = process.attribute.get_params()
                     for key in param_dict:
                         if param_dict[key]["type"] in ["io"]:
-                            file_info = param_dict[key]["value"].split()
-                            if "tiff" == file_info[1]:  # TIFF File
-                                self.tiff_image_path = []
-                                tiff_path = []
-                                if os.path.isdir(file_info[0]):
-                                    for root, dirs, files in os.walk(file_info[0]):
-                                        tiff_path = files
-                                    for file in tiff_path:
-                                        kind = filetype.guess(root + '/' + file)
-                                        if kind and kind.extension:
-                                            self.tiff_image_path.append(root + '/' + file)
-                                        data_length = len(self.tiff_image_path)
-                                    self.tiff_step.append(i)
-                                else:
-                                    QMessageBox.about(self, "wrong", "Please input a tiff folder!")
+                            if key == "file_info":
+                                file_info = param_dict[key]["value"].split()
+                                if "tiff" == file_info[1]:  # TIFF File
+                                    self.tiff_image_path = []
+                                    tiff_path = []
+                                    if os.path.isdir(file_info[0]):
+                                        for root, dirs, files in os.walk(file_info[0]):
+                                            tiff_path = files
+                                        for file in tiff_path:
+                                            kind = filetype.guess(root + '/' + file)
+                                            if kind and kind.extension:
+                                                self.tiff_image_path.append(root + '/' + file)
+                                            data_length = len(self.tiff_image_path)
+                                        self.tiff_step.append(i)
+                                    else:
+                                        QMessageBox.about(self, "wrong", "Please input a tiff folder!")
 
-                            elif "hdf5" == file_info[2]:  # HDF5 File
-                                self.data_in_memory[i][key] = IoHdf5.Load_H5_Data(file_info[0], file_info[1])
-                                length = self.data_in_memory[i][key].shape
+                                elif "hdf5" == file_info[2]:  # HDF5 File
+                                    self.data_in_memory[i][key] = IoHdf5.Load_H5_Data(file_info[0], file_info[1])
+                                    length = self.data_in_memory[i][key].shape
+                                    if len(length) > 1:
+                                        if data_length is None:
+                                            data_length = length[0]
+                                        else:
+                                            if not data_length == length[0]:
+                                                QMessageBox.about(self, "wrong", "the data is not right")
+                                                return
+                                    self.skip_step.append(i)
+                            else:#######################################################################
+                                file_info = param_dict[key]["value"].split()
+                                data_1d = {"x":IoHdf5.Load_H5_Data(file_info[0], file_info[1]),
+                                           "y":IoHdf5.Load_H5_Data(file_info[0], file_info[2])}
+                                self.data_in_memory[i][key] = data_1d
+                                length = self.data_in_memory[i][key]["x"].shape
                                 if len(length) > 1:
                                     if data_length is None:
                                         data_length = length[0]
@@ -105,14 +123,10 @@ class Runthread(QtCore.QThread):
                                 QMessageBox.about(self, "wrong", "load tiff file false!")
                         elif process.attribute.function_text == "Save Data":
                             self.save_path = param_dict["file_folder"]["value"]
-                            dataset_name = param_dict["dataset_name"]["value"]
-                            dataset_num = param_dict["dataset_num"]["value"]
-                            self.dataset_name = dataset_name.split(",")
-                            self.dataset_num = dataset_num.split(",")
-                            self.dataset_num = list(map(int, self.dataset_num))
+                            self.dataset_num = process.step_input_number
                             self.save_data = {}
                             for m in range(len(self.dataset_num)):
-                                self.save_data[self.dataset_num[m]] = None
+                               self.save_data[self.dataset_num[m]] = None
                             self.skip_step.append(i)
                 self.init_flag = 0
             # process data
@@ -126,12 +140,24 @@ class Runthread(QtCore.QThread):
                         if i in self.skip_step:
                             for key in self.data_in_memory[i]:
                                 if process.attribute.get_params()[key]["type"] in ["io"]:
-                                    if self.data_in_memory[i][key].ndim == 1:
-                                        input_value[key] = self.data_in_memory[i][key][gen]
-                                    if self.data_in_memory[i][key].ndim == 2:
-                                        input_value[key] = self.data_in_memory[i][key][gen, :]
-                                    if self.data_in_memory[i][key].ndim == 3:
-                                        input_value[key] = self.data_in_memory[i][key][gen, :, :]
+                                    if isinstance(self.data_in_memory[i][key], dict):
+                                        input_value[key] = {}
+                                        if self.data_in_memory[i][key]["x"].ndim == 1:
+                                            input_value[key]["x"] = self.data_in_memory[i][key]["x"][gen]
+                                            input_value[key]["y"] = self.data_in_memory[i][key]["y"][gen]
+                                        if self.data_in_memory[i][key]["x"].ndim == 2:
+                                            input_value[key]["x"] = self.data_in_memory[i][key]["x"][gen, :]
+                                            input_value[key]["y"] = self.data_in_memory[i][key]["y"][gen, :]
+                                        if self.data_in_memory[i][key]["x"].ndim == 3:
+                                            input_value[key]["x"] = self.data_in_memory[i][key]["x"][gen, :, :]
+                                            input_value[key]["y"] = self.data_in_memory[i][key]["y"][gen, :, :]
+                                    else:
+                                        if self.data_in_memory[i][key].ndim == 1:
+                                            input_value[key] = self.data_in_memory[i][key][gen]
+                                        if self.data_in_memory[i][key].ndim == 2:
+                                            input_value[key] = self.data_in_memory[i][key][gen, :]
+                                        if self.data_in_memory[i][key].ndim == 3:
+                                            input_value[key] = self.data_in_memory[i][key][gen, :, :]
 
                                 if process.attribute.get_params()[key]["type"] in ["file"]:
                                     input_value[key] = self.data_in_memory[i][key]
@@ -171,51 +197,117 @@ class Runthread(QtCore.QThread):
                         if process.step_output_params:
                             steps_output_result[i].update(process.step_output_params)
 
+                    # for key, params_info in self.processing_list[i].attribute.get_params().items():######xiugai
+                    #     print(params_info["type"], params_info["value"])########xiugai
+
                     self.update_attribute_signal.emit()
+
                     # save data
-                    self.save_length = 10
-                    if self.dataset_num:
+                    self.save_length = 2
+                    if self.save_path and self.dataset_num:
                         if gen == 0:
                             for num in self.dataset_num:
-                                if self.processing_list[num - 1].step_output_params["plot"]["type"] == "1DP":
-                                    length1 = \
-                                    self.processing_list[num - 1].step_output_params["plot"]["data"]["x"].shape[0]
-                                    self.save_data[num] = {"x": np.ones((self.save_length, length1)),
-                                                           "y": np.ones((self.save_length, length1))}
-                                    for key, value in self.processing_list[num - 1].attribute.get_params().items():####
-                                        print(key)
-                                        if value["type"] == "enum":
-                                            print(value["value"].value)
-                                        else:
-                                            print(value["value"])
+                                self.save_data[num] = {}
+                                self.save_data[num]["result"] = {}
+                                for key, value in self.processing_list[num - 1].attribute.get_params().items():
+                                    self.save_data[num][value["text"]] = []
+                                    for length_attri in range(self.save_length):
+                                        self.save_data[num][value["text"]].append("")
 
+                                if "plot" in self.processing_list[num - 1].step_output_params:
+                                    if self.processing_list[num - 1].step_output_params["plot"]["type"] == "1DP":
+                                        if isinstance(self.processing_list[num - 1].step_output_params["plot"]["data"],
+                                                      list):
+                                            for data_xy in self.processing_list[num - 1].step_output_params["plot"]["data"]:
+                                                length1 = data_xy["x"].shape[0]
+                                                self.save_data[num]["result"][data_xy["legend"] + "_x"] = np.ones((self.save_length, length1))
+                                                self.save_data[num]["result"][data_xy["legend"] + "_y"] = np.ones((self.save_length, length1))
+                                        else:
+                                            length1 = \
+                                                self.processing_list[num - 1].step_output_params["plot"]["data"]["x"].shape[0]
+                                            self.save_data[num]["result"]["x"] = np.ones((self.save_length, length1))
+                                            self.save_data[num]["result"]["y"] = np.ones((self.save_length, length1))
+
+                                    elif self.processing_list[num - 1].step_output_params["plot"]["type"] == "2DXY":
+                                        lengthx = self.processing_list[num - 1].step_output_params["plot"]["data"]["x"].shape[0]
+                                        lengthy = self.processing_list[num - 1].step_output_params["plot"]["data"]["y"].shape[0]
+                                        self.save_data[num]["result"]["x"] = np.ones((self.save_length, lengthx))
+                                        self.save_data[num]["result"]["y"] = np.ones((self.save_length, lengthy))
+                                        self.save_data[num]["result"]["z"] = np.ones((self.save_length, lengthy, lengthx))
+
+                                    elif self.processing_list[num - 1].step_output_params["plot"]["type"] == "2DV":
+                                        length1 = self.processing_list[num - 1].step_output_params["plot"]["image"].shape[0]
+                                        length2 = self.processing_list[num - 1].step_output_params["plot"]["image"].shape[1]
+                                        self.save_data[num]["result"]["image"] = np.ones((self.save_length, length2, length1))
+
+                                    elif self.processing_list[num - 1].step_output_params["plot"]["type"] == "2DP":
+                                        self.save_data[num]["result"]["x"] = np.ones(self.save_length)
 
                         for num in self.dataset_num:
-                            if self.processing_list[num - 1].step_output_params["plot"]["type"] == "1DP":
-                                self.save_data[num]["x"][gen % self.save_length][:] = \
-                                self.processing_list[num - 1].step_output_params["plot"]["data"]["x"]
-                                self.save_data[num]["y"][gen % self.save_length][:] = \
-                                self.processing_list[num - 1].step_output_params["plot"]["data"]["y"]
+                            for key, value in self.processing_list[num - 1].attribute.get_params().items():
+                                if value["type"] == "enum":
+                                    result = value["value"].value
+                                else:
+                                    result = value["value"]
+                                self.save_data[num][value["text"]][gen % self.save_length] = str(result)
 
+                            if "plot" in self.processing_list[num - 1].step_output_params:
+                                if self.processing_list[num - 1].step_output_params["plot"]["type"] == "1DP":
+                                    if isinstance(self.processing_list[num - 1].step_output_params["plot"]["data"], list):
+                                        for data_xy in self.processing_list[num - 1].step_output_params["plot"]["data"]:
+                                            print(data_xy["x"].shape)
+                                            self.save_data[num]["result"][data_xy["legend"]+"_x"][gen % self.save_length, :] = data_xy["x"]
+                                            self.save_data[num]["result"][data_xy["legend"]+"_y"][gen % self.save_length, :] = data_xy["y"]
+                                    else:
+                                        self.save_data[num]["result"]["x"][gen % self.save_length, :] = \
+                                            self.processing_list[num - 1].step_output_params["plot"]["data"]["x"]
+                                        self.save_data[num]["result"]["y"][gen % self.save_length, :] = \
+                                            self.processing_list[num - 1].step_output_params["plot"]["data"]["y"]
 
-                        if gen and gen % self.save_length == 0:
+                                elif self.processing_list[num - 1].step_output_params["plot"]["type"] == "2DXY":
+                                    self.save_data[num]["result"]["x"][gen % self.save_length][:] = \
+                                        self.processing_list[num - 1].step_output_params["plot"]["data"]["x"]
+                                    self.save_data[num]["result"]["y"][gen % self.save_length][:] = \
+                                        self.processing_list[num - 1].step_output_params["plot"]["data"]["y"]
+                                    self.save_data[num]["result"]["z"][gen % self.save_length][:] = \
+                                        self.processing_list[num - 1].step_output_params["plot"]["data"]["z"]
+
+                                elif self.processing_list[num - 1].step_output_params["plot"]["type"] == "2DV":
+                                    self.save_data[num]["result"]["image"][gen % self.save_length][:] = \
+                                        self.processing_list[num - 1].step_output_params["plot"]["image"]
+
+                                elif self.processing_list[num - 1].step_output_params["plot"]["type"] == "2DP":
+                                    self.save_data[num]["result"]["value"][gen % self.save_length][:] = \
+                                        self.processing_list[num - 1].step_output_params["plot"]["data"]["value"]
+
+                        if gen and gen % self.save_length == 1:
                             for key, value in self.save_data.items():
-                                name = self.dataset_name[self.dataset_num.index(key)]
-                                if "x" in value and "y" in value:
-                                    IoHdf5.Save_H5_data(self.save_path, name + "_x", value["x"])
-                                    IoHdf5.Save_H5_data(self.save_path, name + "_y", value["y"])
-                        elif gen == data_length - 1 and data_length % self.save_length > 0:
+                                step_text = self.processing_list[key - 1].step_text
+                                for attri_text, atrri_value in self.save_data[key].items():
+                                    if attri_text == "result":
+                                        for tt in self.save_data[key][attri_text]:
+                                            IoHdf5.Save_H5_data(self.save_path, step_text+"/result/" + tt, atrri_value[tt], data_length=data_length, end=gen, save_length=self.save_length)
+                                    else:
+                                        IoHdf5.Save_H5_data(self.save_path, step_text+"/"+attri_text, atrri_value, data_set_type="attri", data_length = data_length,end=gen,save_length=self.save_length)
+
+                        elif gen == data_length - 1 and gen % self.save_length > 0:
                             for key, value in self.save_data.items():
-                                name = self.dataset_name[self.dataset_num.index(key)]
-                                if "x" in value and "y" in value:
-                                    IoHdf5.Save_H5_data(self.save_path, name + "_x", value["x"][0:data_length % self.save_length,:])
-                                    IoHdf5.Save_H5_data(self.save_path, name + "_y", value["y"][0:data_length % self.save_length,:])
+                                step_text = self.processing_list[key - 1].step_text
+                                for attri_text, atrri_value in self.save_data[key].items():
+                                    if attri_text == "result":
+                                        for tt in self.save_data[key][attri_text]:
+                                            IoHdf5.Save_H5_data(self.save_path, step_text+"/result/" + tt,
+                                                                atrri_value, data_length = data_length, end=gen, save_length=self.save_length)
+                                    else:
+                                        IoHdf5.Save_H5_data(self.save_path, step_text+"/"+ attri_text,
+                                                            atrri_value, data_set_type="attri", data_length = data_length,end=gen, save_length=self.save_length)
+
                 self.signal_thread_end.emit()
             else:
                 self.signal_thread_error.emit()
                 return
         except Exception as e:
-            self.excepted.emit(str(e))
+           self.excepted.emit(str(e))
 
 
 class ProcessingOperateWidget(QWidget):
@@ -237,6 +329,16 @@ class ProcessingOperateWidget(QWidget):
         self.navbar.addAction(self.action_stop)
         self.action_stop.setEnabled(False)
 
+        self.action_save = QAction("SAVE PLAN", self)
+        self.action_save.setIcon(QIcon(os.getcwd() + '/ui/icons/save.png'))
+        self.action_save.triggered.connect(self.save_button_clicked)
+        self.navbar.addAction(self.action_save)
+
+        self.action_load = QAction("LOAD PLAN", self)
+        self.action_load.setIcon(QIcon(os.getcwd() + '/ui/icons/load.png'))
+        self.action_load.triggered.connect(self.load_button_clicked)
+        self.navbar.addAction(self.action_load)
+
         # self.navbar.addAction(QIcon('ui/icons/save.png'), "Save Processing")
         # self.navbar.addAction(QIcon('ui/icons/load.png'), "load Processing")
         # processing Widget layout-------------------------------------------------------------------
@@ -246,6 +348,35 @@ class ProcessingOperateWidget(QWidget):
         self.processing_widget = ProcessingWidget()
         self.layout.addWidget(self.processing_widget)
         self.thread = None
+
+
+    def save_button_clicked(self):
+        file_path = QFileDialog.getSaveFileName(self, "save plan dialog", "D:/", "Txt files(*.yaml)")
+        plan_dir = file_path[0][0: file_path[0].rfind('/')]
+        file_name = file_path[0][file_path[0].rfind('/') + 1:]
+        if file_name:
+            if self.processing_widget.processing_list:
+                PlanManager.save_processing_plan(plan_dir, file_name, self.processing_widget.processing_list)
+            else:
+                QMessageBox.about(self, "Error Message", "Do not save the empty plan")
+        else:
+            QMessageBox.about(self, "Error Message", "please input file name")
+
+    def load_button_clicked(self):
+        file_path = QFileDialog.getOpenFileName(self, "open plan dialog", "D:/", "Txt files(*.yaml)")
+        plan_dir = file_path[0][0: file_path[0].rfind('/')]
+        file_name = file_path[0][file_path[0].rfind('/') + 1:]
+        plan_text = PlanManager.load_processing_plan(plan_dir, file_name)
+        if plan_text is not None:
+            self.processing_widget.processing_list = plan_text
+            self.processing_widget.update_steps_tableWidget()
+            # self.processing_widget.steps_tablewidget.insertRow(len(self.processing_list))
+            # self.processing_widget.steps_tablewidget.setCellWidget(len(self.processing_list), 0,
+            #                                              Button("add", self.processing_widget.add_step_button_clicked))
+            # self.processing_widget.update_attribute(0)
+        else:
+            QMessageBox.about(self, "Error Message", "please load the correct plan")
+
 
     def start_work(self):
         for widget_dict in [self.processing_widget.plot1d_widget_dict, self.processing_widget.plot2d_widget_dict,
@@ -441,7 +572,7 @@ class ProcessingWidget(QWidget, Ui_processing_widget):
             for i in range(row):
                 self.step_remove[i] = Button("remove", self.remove_step_button_clicked, i)
                 self.steps_tablewidget.setCellWidget(i, 0, self.step_remove[i])
-                item_text = self.processing_list[i].step_text + "   " + str(self.processing_list[i].step_input_number)
+                item_text = self.processing_list[i].attribute.function_text + "   " + str(self.processing_list[i].step_input_number)
                 uid = self.processing_list[i].step_connect_widget
                 if uid in self.plot1d_widget_dict:
                     item_text = item_text + "   " + str(self.plot1d_widget_dict[uid]["name"])
@@ -575,7 +706,10 @@ class ProcessingWidget(QWidget, Ui_processing_widget):
             file_select_button = QPushButton("…")
             file_select_button.setMaximumWidth(40)
             if attribute_type in ["io"]:
-                file_select_button.clicked.connect(lambda: self.file_select_button_clicked_dialog(file_select))
+                if attribute_key == "file_location":
+                    file_select_button.clicked.connect(lambda: self.file1d_select_button_clicked_dialog(file_select))
+                else:
+                    file_select_button.clicked.connect(lambda: self.file_select_button_clicked_dialog(file_select))
             layout.addWidget(file_select)
             layout.addWidget(file_select_button)
             layout.setContentsMargins(0, 0, 0, 0)
@@ -609,6 +743,13 @@ class ProcessingWidget(QWidget, Ui_processing_widget):
                     select.setText('{} {} {}'.format(file_info["file"], file_info["h5_dataset"], file_info["type"]))
             elif "file" in file_info and file_info["file"] and "type" in file_info and file_info["type"]:
                 select.setText('{} {}'.format(file_info["file"], file_info["type"]))
+
+    def file1d_select_button_clicked_dialog(self, select):
+        dialog = Select_1D_file_dialog()
+        if dialog.exec_():
+            file_info = dialog.file_info
+            if "file" in file_info and "x_dataset" in file_info and "y_dataset" in file_info:
+                select.setText('{} {} {}'.format(file_info["file"], file_info["x_dataset"], file_info["y_dataset"]))
 
     def file_select_button_clicked(self, file_select):
         file_name, file_type = QFileDialog.getOpenFileName(self, "getOpenFileName", "./",

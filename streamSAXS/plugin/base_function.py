@@ -15,8 +15,8 @@ from lmfit import Minimizer, Parameters
 #import traceback
 
 # lib for SAXS
-#import bioxtasraw.RAWAPI as raw #lib for GuinierOperation
-#import bioxtasraw.SASM as SASM #lib for GuinierOperation
+import bioxtasraw.RAWAPI as raw #lib for GuinierOperation
+import bioxtasraw.SASM as SASM #lib for GuinierOperation
 from scipy import integrate #lib for IntegralInvariant
 
 
@@ -64,6 +64,38 @@ def detectorCalibrationFit2d(wavelength,sdd,centerX,centerY,pixelX,pixelY,rotati
                         tiltPlanRotation=rotation,tilt=tilt)
        
     return integrator
+
+def flatCorrection(integrator,data,flat):
+    '''
+    Parameters
+    ----------
+    data: 2D array
+    flat: 2D array
+        flat field 2D array read from file.
+
+    Returns
+    -------
+    data: 2D array
+        data after flat field correction
+    '''
+    result = integrator.flat_correction(data,flat)
+    return result[0]
+
+def darkCorrection(integrator,data,dark):
+    '''
+    Parameters
+    ----------
+    data: 2D array
+    dark: 2D array
+        dark current 2D array read from file.
+
+    Returns
+    -------
+    data: 2D array
+        data after dark current correction
+    '''
+    result = integrator.dark_correction(data,dark)
+    return result[0]
 
 #%%
 #------------------------------------Masking-----------------------------------
@@ -174,6 +206,7 @@ def integrate2D(integrator,data,npt_rad,unit='q_nm^-1',radial_range=None,npt_azi
     return result
 
 # integrate azimuthal I~q
+"""
 def integrateAzimuthal(integrator,data,npt,unit='q_nm^-1',radial_range=None,azimuth_range=None,polarization_factor=None,mask=None):
     
     result = integrator.integrate1d(data=data, mask=mask, npt=npt,unit=unit,
@@ -181,7 +214,24 @@ def integrateAzimuthal(integrator,data,npt,unit='q_nm^-1',radial_range=None,azim
                                     polarization_factor=polarization_factor)
         
     return result
+"""
+def integrateAzimuthal(integrator, data, npt, unit='q_nm^-1', radial_range=None, azimuth_range=None,
+                       polarization_factor=None, mask=None, error_model=None):
+    if error_model == None:
+        method = 'csr'
+    else:  # error_model='poisson' or 'azimuthal'
+        method = ("no", "csr", "cython")
+        # 'no','full','pseudo'
+        # "csr","histogram",
+        # 'cython',"opencl", "python"
 
+    result = integrator.integrate1d(data=data, mask=mask, npt=npt, unit=unit,
+                                    radial_range=radial_range, azimuth_range=azimuth_range,
+                                    polarization_factor=polarization_factor,
+                                    method=method,
+                                    error_model=error_model)
+
+    return result
 # integrate radial I~chi
 def integrateRadial(integrator,data,npt,npt_rad,unit='chi_deg',azimuth_range=None,radial_unit='q_nm^-1',radial_range=None,polarization_factor=None,mask=None):
     
@@ -326,7 +376,9 @@ def singlePeakFit(x,y,autoFit=True,peak_type="Gaussian+LinearBg",
                 'fwhm':resultTemp.params['fwhm'].value,
                 'area':resultTemp.params['area'].value,
                 'k':resultTemp.params['k'].value,
-                'd':resultTemp.params['d'].value} 
+                'd':resultTemp.params['d'].value,
+                'peak_intensity_max':np.max(yfit)
+                }
         if peak_type=="Vogit+LinearBg":
             result['n']=resultTemp.params['n'].value
         
@@ -339,11 +391,38 @@ def singlePeakFit(x,y,autoFit=True,peak_type="Gaussian+LinearBg",
                 'fwhm':np.nan,
                 'area':np.nan,
                 'k':np.nan,
-                'd':np.nan} 
+                'd':np.nan,
+                'peak_intensity_max':np.nan
+                }
         if peak_type=="Vogit+LinearBg":
             result['n']=np.nan
             
         return result,yfit
+#%%
+#-----------------------------------XRD----------------------------------------
+# ROI peak Intensity
+def ROIPeak(x,y,Xrange):
+    '''
+
+    Parameters
+    ----------
+    x: array X
+    y: array Y
+    Xrange :(min,max)  (float,float)
+
+    Returns
+    -------
+    float：Xrange范围内y的加和
+    '''
+
+    x_min = Xrange[0]
+    x_max =Xrange[1]
+    x_min_pixel = np.where(x< x_min)[0][-1]
+    x_max_pixel = np.where(x > x_max)[0][0]
+    #xROI = x[x_min_pixel:x_max_pixel]  # attention the last value shoule +1
+    yROI = y[x_min_pixel:x_max_pixel]
+
+    return np.sum(yROI)
 
 #%%
 #-----------------------------------XRD----------------------------------------
@@ -394,7 +473,8 @@ def singlePeakFit_2D(data,miny, maxy, minx, maxx):
 
 #%%
 #-----------------------------------SAXS----------------------------------------
-def guinierFit(q,intensity,autoFit=True,q_range=None):
+
+def guinierFit_test(q,intensity,autoFit=True,q_range=None):
     '''
     Parameters
     ----------
@@ -421,11 +501,13 @@ def guinierFit(q,intensity,autoFit=True,q_range=None):
             result={'Rg':resultTemp[0],'I0':resultTemp[1],'rg_err':resultTemp[2],'i0_err':resultTemp[3],
                     'qmin': resultTemp[4],'qmax': resultTemp[5],'qrg_min': resultTemp[6],'qrg_max': resultTemp[7],
                     'qmin_Pixel':resultTemp[8],'qmax_Pixel':resultTemp[9],'r_sq':resultTemp[10]}
+
         else:
             resultTemp=raw.guinier_fit(profile, qmin=q_range[0], qmax=q_range[1], error_weight=False)
             result = {'Rg': resultTemp[0], 'I0': resultTemp[1], 'rg_err': resultTemp[2], 'i0_err': resultTemp[3],
                       'qmin': resultTemp[4], 'qmax': resultTemp[5], 'qrg_min': resultTemp[6], 'qrg_max': resultTemp[7],
                        'qmin_Pixel':resultTemp[8], 'qmax_Pixel': resultTemp[9],'r_sq':resultTemp[10]}
+
         
 
         fun_lnI=lambda I0,Rg,q:np.log(I0)-Rg**2*q**2/3      
@@ -439,7 +521,47 @@ def guinierFit(q,intensity,autoFit=True,q_range=None):
                   'qmin_Pixel':np.nan, 'qmax_Pixel': np.nan,'r_sq':np.nan}
         fun_lnI=np.nan
         return result,fun_lnI
-        
+
+
+def guinierFit(q, intensity, autoFit=True, q_range=None):
+    '''
+    Parameters
+    ----------
+    q: 1D array
+    intensity : 1D array
+    autoFit : bool
+        True-q_range for guinier is auto fited. False- user defined q_range is used when fitting.
+    q_range : tuple (idx_min,idx_max)
+        Only used when autoFit is False.
+
+    Returns
+    -------
+    result : dict including fitting parameters.
+    fun_lnI : function used for calculating yfit.
+
+    '''
+
+    profile = SASM.SASM(i=intensity, q=q, err=np.zeros_like(q),
+                        parameters={'filename': None})  # generate an object of SASM for input of function auto_guinier
+    try:
+        if autoFit is True:
+            resultTemp = raw.auto_guinier(profile, error_weight=False)
+            result = {'Rg': resultTemp[0], 'I0': resultTemp[1], 'qmin_Pixel': resultTemp[8],
+                      'qmax_Pixel': resultTemp[9]}
+        else:
+            resultTemp = raw.guinier_fit(profile, idx_min=q_range[0], idx_max=q_range[1], error_weight=False)
+            result = {'Rg': resultTemp[0], 'I0': resultTemp[1], 'qmin_Pixel': q_range[0], 'qmax_Pixel': q_range[1]}
+
+        fun_lnI = lambda I0, Rg, q: np.log(I0) - Rg ** 2 * q ** 2 / 3
+
+        return result, fun_lnI
+
+    except Exception:  # all exception
+        # traceback.print_exc()
+        result = {'Rg': np.nan, 'I0': np.nan, 'qmin_Pixel': np.nan, 'qmax_Pixel': np.nan}
+        fun_lnI = np.nan
+        return result, fun_lnI
+
 
 def porodFit(q,intensity,q_range):
     '''
@@ -532,6 +654,34 @@ def integralInvariant(x,y,rg,i0,porodK):
     
     return invQ
 
+
+# ------------------------------------------------------------------------------
+# instrumental resolution
+def resolutionSAXS(x, peakFWHM, peakCenter, wavelength, wavedistribution, size):
+    '''
+    Parameters
+    ----------
+    x : 1D array, q(nm^-1/A^-1) or 2theta(degree)
+    peakFWHM : Fitted FWHM(001),unit in 2theta(degree)
+    peakCenter: Fitted Center(001), unit in 2theta(degree)
+    wavelength: lamda
+    wavedistribution: related to energy resolution(delta lamda/lamda=delta E/E)
+    size:size of standard sample(average thickness,because surface~um),unit same to lamda
+
+
+    Returns
+    -------
+    dev : 1D array with same size to x
+
+    '''
+
+    coeff = 2 * np.sqrt(2 * np.log(2))  # FWHM=2.355sigma for Gaussian
+    const = peakFWHM ** 2 - (peakCenter * wavedistribution) ** 2 - (wavelength / size / np.cos(peakCenter / 2)) ** 2
+    devsquare = (wavedistribution * x) ** 2 + (2 * np.pi / wavelength) ** 2 * const
+    dev = np.sqrt(devsquare) / coeff
+
+    return dev
+
 #%%
 #---------------------------------ImageOperation-------------------------------
 # image flip
@@ -579,6 +729,11 @@ def curvePositive(x,y):
     
     return x,y
 '''
+
+def curveCrop(x,y,start,end):
+
+    return x[start:end],y[start:end]
+
 
 #%%
 #----------------------------------------------------------------------------        

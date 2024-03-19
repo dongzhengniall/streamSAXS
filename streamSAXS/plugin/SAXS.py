@@ -15,6 +15,7 @@ import numpy as np
 
 #%%
 #------------------------------------------------------------------------------
+"""
 class GuinierOperation(ProcessingFunction):
     function_text = 'Guinier Operation'
     function_tip = 'Guinier calculation(I~q-->lnI~q^2) and Guinier fitting'
@@ -25,16 +26,16 @@ class GuinierOperation(ProcessingFunction):
                                              'tip':"If not selected, Guinier plot will be displayed but Guinier Fit won't be done."}
         self._params_dict['autoFit'] = {'type': 'bool', 'value': False, 'text': 'Auto Calculation for Guinier region',
                                         'tip':"If selected, q range for Guinier fit is calculated automatically. If not, Guinier fit is applied to the filled q range."}
-        self._params_dict['q_range'] = {'type': 'tuple_float', 'value': None, 'text': 'Guinier region',
-                                        'tip': "(qmin ,qmax )"}
+        self._params_dict['q_range'] = {'type': 'tuple_int', 'value': (0,8), 'text': 'Guinier region',
+                                                'tip': "(q_idx_min ,q_idx_max )"}
 
         self._params_dict['Rg'] = {'type': 'float', 'value': None, 'text': 'Rg', 'tip': "Rg"}
-        self._params_dict['rg_err'] = {'type': 'float', 'value': None, 'text': 'Rg_err', 'tip': "Rg_err"}
+        #self._params_dict['rg_err'] = {'type': 'float', 'value': None, 'text': 'Rg_err', 'tip': "Rg_err"}
         self._params_dict['I0'] = {'type': 'float', 'value': None, 'text': 'I0', 'tip': "I0"}
-        self._params_dict['i0_err'] = {'type': 'float', 'value': None, 'text': 'I0_err', 'tip': "I0_err"}
+        #self._params_dict['i0_err'] = {'type': 'float', 'value': None, 'text': 'I0_err', 'tip': "I0_err"}
 
-        self._params_dict['q_range_Rg'] = {'type': 'tuple_float', 'value': None, 'text': 'qminRg,qmaxRg',
-                                   'tip': "qminRg,qmaxRg"}
+        #self._params_dict['q_range_Rg'] = {'type': 'tuple_float', 'value': None, 'text': 'qminRg,qmaxRg',
+        #                                    'tip': "qminRg,qmaxRg"}
 
 
     def run_function(self, data,label):
@@ -50,9 +51,11 @@ class GuinierOperation(ProcessingFunction):
         '''
         
         if self.get_param_value('isGuinierFit') is False:
+            '''
             data['GuinierX']=data['x']**2
             data['GuinierY'] = np.log(data['y'])
             data['result']=None
+            '''
             return {'data': data,
                     'plot':{'data': {'x':data['x']**2, 'y': np.log(data['y'])},
                          'type': '1DP',
@@ -63,15 +66,17 @@ class GuinierOperation(ProcessingFunction):
         else:
             result,fun_lnI=bf.guinierFit(q=data['x'],intensity=data['y'], autoFit=self.get_param_value('autoFit'), q_range=self.get_param_value('q_range'))
             if result['Rg']>0:
-                self.set_param('q_range', (result['qmin'], result['qmax']))
+                self.set_param('q_range', (result['qmin_Pixel'], result['qmax_Pixel']))
                 self.set_param('Rg', result['Rg'])
-                self.set_param('rg_err', result['rg_err'])
+                #self.set_param('rg_err', result['rg_err'])
                 self.set_param('I0', result['I0'])
-                self.set_param('i0_err', result['i0_err'])
-                self.set_param('q_range_Rg', (result['qrg_min'], result['qrg_max']))
+                #self.set_param('i0_err', result['i0_err'])
+                #self.set_param('q_range_Rg', (result['qrg_min'], result['qrg_max']))
+                '''
                 data['GuinierX'] = data['x'][result['qmin_Pixel']:result['qmax_Pixel']+1]**2
                 data['GuinierY'] = fun_lnI(result['I0'],result['Rg'],data['x'][result['qmin_Pixel']:result['qmax_Pixel']+1])
                 data['result'] = result
+                '''
                 return {'data': data,
                         'plot': {'data': [
                                         {'name': 'guinier', 'style': 'line', 'color': 'b', 'legend': 'Guinier',
@@ -98,17 +103,147 @@ class GuinierOperation(ProcessingFunction):
 
             else:
                 ###############失败后怎么办呢######################
+                '''
                 data['GuinierX'] = data['x'] ** 2
                 data['GuinierY'] = np.log(data['y'])
                 data['result'] = None
+                
                 return {'data': data,
-                        'data_display':{},#待补充
-                        'parameter_display':{'q_range':(result['qmin_Pixel'],result['qmax_Pixel'])}, # need be showed in the initial parameter position
-                        'num_value':result}
-        
+                        'plot': {},  # 待补充
+                        'parameter_display': {'q_range': (result['qmin_Pixel'], result['qmax_Pixel'])},
+                        # need be showed in the initial parameter position
+                        'num_value': result}
+                '''
+                return {'data': data,
+                        'plot': {'data': {'x': data['x'] ** 2, 'y': np.log(data['y'])},
+                                 'type': '1DP',
+                                 'label': {'xlabel': 'q^2', 'ylabel': 'lnI-exception'},
+                                 'title': "Guinier plot"}
+                        }
+
+
     def param_validation(self):
         if self.get_param_value('isGuinierFit') is True and \
             self.get_param_value('autoFit') is False and \
+                self.get_param_value('q_range') is None:
+            raise ValueError("The q range must be input when auto fitting isn't selected!")
+"""
+
+
+class GuinierOperation(ProcessingFunction):
+    function_text = 'Guinier Operation'
+    function_tip = 'Guinier calculation(I~q-->lnI~q^2) and Guinier fitting'
+
+    def __init__(self):
+        super().__init__()
+        self._params_dict['isGuinierFit'] = {'type': 'bool', 'value': False, 'text': 'Guinier Fit',
+                                             'tip': "If not selected, Guinier plot will be displayed but Guinier Fit won't be done."}
+        self._params_dict['autoFit'] = {'type': 'bool', 'value': False, 'text': 'Auto Calculation for Guinier region',
+                                        'tip': "If selected, q range for Guinier fit is calculated automatically. If not, Guinier fit is applied to the filled q range."}
+        self._params_dict['q_range'] = {'type': 'tuple_int', 'value': (0, 8), 'text': 'Guinier region',
+                                        'tip': "(q_idx_min ,q_idx_max )"}
+
+        self._params_dict['Rg'] = {'type': 'float', 'value': None, 'text': 'Rg', 'tip': "Rg"}
+        # self._params_dict['rg_err'] = {'type': 'float', 'value': None, 'text': 'Rg_err', 'tip': "Rg_err"}
+        self._params_dict['I0'] = {'type': 'float', 'value': None, 'text': 'I0', 'tip': "I0"}
+        # self._params_dict['i0_err'] = {'type': 'float', 'value': None, 'text': 'I0_err', 'tip': "I0_err"}
+
+        # self._params_dict['q_range_Rg'] = {'type': 'tuple_float', 'value': None, 'text': 'qminRg,qmaxRg',
+        #                                    'tip': "qminRg,qmaxRg"}
+
+    def run_function(self, data, num_value, label):
+        self.param_validation()
+        # self.isData1D()
+        '''
+        if label['xlabel']=='q (nm^-1)':
+            xlabel='q^2 (nm^-2)'
+        elif label['xlabel']=='q (A^-1)':
+            xlabel='q^2 (A^-2)'
+        else:
+            raise IOError("X Label Read Error!")
+        '''
+
+        if self.get_param_value('isGuinierFit') is False:
+            '''
+            data['GuinierX']=data['x']**2
+            data['GuinierY'] = np.log(data['y'])
+            data['result']=None
+            '''
+            return {'data': data,
+                    'plot': {'data': {'x': data['x'] ** 2, 'y': np.log(data['y'])},
+                             'type': '1DP',
+                             'label': {'xlabel': 'q^2', 'ylabel': 'lnI'},
+                             'title': "Guinier plot"}
+                    }
+
+        else:
+            result, fun_lnI = bf.guinierFit(q=data['x'], intensity=data['y'], autoFit=self.get_param_value('autoFit'),
+                                            q_range=self.get_param_value('q_range'))
+            if result['Rg'] > 0:
+                self.set_param('q_range', (result['qmin_Pixel'], result['qmax_Pixel']))
+                self.set_param('Rg', result['Rg'])
+                # self.set_param('rg_err', result['rg_err'])
+                self.set_param('I0', result['I0'])
+                # self.set_param('i0_err', result['i0_err'])
+                # self.set_param('q_range_Rg', (result['qrg_min'], result['qrg_max']))
+                '''
+                data['GuinierX'] = data['x'][result['qmin_Pixel']:result['qmax_Pixel']+1]**2
+                data['GuinierY'] = fun_lnI(result['I0'],result['Rg'],data['x'][result['qmin_Pixel']:result['qmax_Pixel']+1])
+                data['result'] = result
+                '''
+                if num_value:
+                    result_new={**num_value,**result}
+                else:
+                    result_new=result
+                return {'data': data,
+                        'plot': {'data': [
+                            {'name': 'guinier', 'style': 'line', 'color': 'b', 'legend': 'Guinier',
+                             'x': data['x'][0:result['qmax_Pixel'] + 6] ** 2,
+                             'y': np.log(data['y'][0:result['qmax_Pixel'] + 6])},
+                            {'name': 'guinierFit', 'style': 'line', 'color': 'r', 'legend': 'GuinierFit',
+                             'x': data['x'][result['qmin_Pixel']:result['qmax_Pixel'] + 1] ** 2,
+                             'y': fun_lnI(result['I0'], result['Rg'],
+                                          data['x'][result['qmin_Pixel']:result['qmax_Pixel'] + 1])}
+                        ],
+                            'type': '1DP',
+                            'label': {'xlabel': 'q^2', 'ylabel': 'lnI'},
+                            'title': "GuinierFit"},
+                        'num_value': result_new
+                        # "DataSave_Update":{
+                        #     'GuinierFitParas':[result['Rg'], result['rg_err'] ,result['I0'], result['i0_err'],
+                        #                        result['qmin'],result['qmax'],result['qrg_min'],result['qrg_max'],
+                        #                        result['qmin_Pixel'], result['qmax_Pixel'], result['r_sq']],
+                        #     'GuinierFitX':data['x']**2,
+                        #     "GuinierFitY":fun_lnI(result['I0'],result['Rg'],data['x'])
+                        #                   },
+                        # "DataSave_Static":{
+                        #     'GuinierFitParas_Description','Rg,Rg_err,I0,I0_err,qmin,qmax,qrg_min,qrg_max,qmin_Pixel,qmax_Pixel,r_sq'
+                        #                    }
+                        }
+
+            else:
+                ###############失败后怎么办呢######################
+                '''
+                data['GuinierX'] = data['x'] ** 2
+                data['GuinierY'] = np.log(data['y'])
+                data['result'] = None
+
+                return {'data': data,
+                        'plot': {},  # 待补充
+                        'parameter_display': {'q_range': (result['qmin_Pixel'], result['qmax_Pixel'])},
+                        # need be showed in the initial parameter position
+                        'num_value': result}
+                '''
+                return {'data': data,
+                        'plot': {'data': {'x': data['x'] ** 2, 'y': np.log(data['y'])},
+                                 'type': '1DP',
+                                 'label': {'xlabel': 'q^2', 'ylabel': 'lnI-exception'},
+                                 'title': "Guinier plot"}
+                        }
+
+    def param_validation(self):
+        if self.get_param_value('isGuinierFit') is True and \
+                self.get_param_value('autoFit') is False and \
                 self.get_param_value('q_range') is None:
             raise ValueError("The q range must be input when auto fitting isn't selected!")
 
@@ -124,7 +259,7 @@ class PorodOperation(ProcessingFunction):
                                     'tip':"If selected, porod fit is done."}
         self._params_dict['correction'] = {'type': 'bool', 'value': False, 'text': 'Porod Correction',
                                            'tip':"If selected, porod correction is done and high q linear range will be needed."}
-        self._params_dict['q_range']={'type': 'tuple_int', 'value': (10,1000), 'text': 'high q linear range','tip':'(min,max) in pixel'}
+        self._params_dict['q_range']={'type': 'tuple_int', 'value': (170,267), 'text': 'high q linear range','tip':'(min,max) in pixel'}
 
         self._params_dict['PorodSlope'] = {'type': 'float', 'value': None, 'text': 'PorodSlope','tip':'PorodSlope'}
         self._params_dict['PorodLnK'] = {'type': 'float', 'value': None, 'text': 'PorodLnK', 'tip': 'PorodLnK'}
@@ -181,7 +316,7 @@ class PorodOperation(ProcessingFunction):
             else:
                 intensity_correct,yPorod_correct=bf.porodCorrect(q, intensity, slopefit, lnKfit)
                 return {'data': {'x': q, 'y': intensity_correct},
-                        'label': {'xlabel': 'q^2', 'ylabel': 'I(q)*q^4'},
+                        'label': {'xlabel': 'q', 'ylabel': 'Intensity'},
                         'plot': {'data': [{'name': 'Porod','style':'line','color':'b','legend':'Porod' ,'x': xPorod, 'y': yPorod},
                                           {'name': 'Porod_correct','style':'line','color':'r','legend':'Porod_correct', 'x':xPorod,'y':yPorod_correct}],
                                  'type': '1DP',
@@ -218,7 +353,7 @@ class KratkyAnalysis(ProcessingFunction):
         intensity = data['y']
         GuinierFit=data['result']
         if self.get_param_value('Normalized_profiles') is False or GuinierFit is None:
-            print('wwwwww',GuinierFit)
+            #print('wwwwww',GuinierFit)
             return {'data':{'x':q,'y':intensity},
                     'plot':{'data':{'x':q,'y':intensity*(q**2)},
                             'type':'1DP' ,
@@ -244,50 +379,54 @@ class KratkyAnalysis(ProcessingFunction):
 
             
 # #------------------------------------------------------------------------------
-# class IntegralInvariant(ProcessingFunction):
-#     function_text = 'Integral Invariant'
-#     function_tip = 'Calculate the integral invariant (Q) from SAXS curve I~q. Porod operation and Guinier operation are required in advance.'
-#
-#     def __init__(self):
-#         super().__init__()
-#
-#     def run_function(self, data,num_value,label):
-#         self.param_validation()
-#         # self.isData1D()
-#
-#         if not 'Rg' in num_value:
-#             raise RuntimeWarning("Guinier operation haven't been done.")
-#         if not 'PorodConstantK' in num_value:
-#             raise RuntimeWarning("Porod operation haven't been done.")
-#
-#         invQ=bf.integralInvariant(data['x'], data['y'], num_value['Rg'], num_value['I0'], num_value['PorodConstantK'])
-#
-#         return {'data': data,
-#                 'num_value':{'InvariantQ':invQ}}
-#
-# #------------------------------------------------------------------------------
-# class TParameter(ProcessingFunction):
-#     function_text = 'T Parameter'
-#     function_tip = 'Calculate T-parameter from SAXS curve I~q. Integral invariant are required in advance.'
-#
-#     def __init__(self):
-#         super().__init__()
-#
-#     def run_function(self, num_value):
-#         self.param_validation()
-#         # self.isData1D()
-#
-#         if not 'InvariantQ' in num_value:
-#             raise RuntimeWarning("Integral invariant haven't been calculated.")
-#
-#         t_parameter=4*num_value['invQ']/np.pi/num_value['PorodConstantK']
-#
-#         return {'num_value':{'T_Parameter':t_parameter}}
-#
+class IntegralInvariant(ProcessingFunction):
+    function_text = 'Integral Invariant'
+    function_tip = 'Calculate the integral invariant (Q) from SAXS curve I~q. Porod operation and Guinier operation are required in advance.'
+
+    def __init__(self):
+        super().__init__()
+
+    def run_function(self, data,num_value,label):
+        self.param_validation()
+        # self.isData1D()
+
+        if not 'Rg' in num_value:
+            raise RuntimeWarning("Guinier operation haven't been done.")
+        if not 'PorodConstantK' in num_value:
+            raise RuntimeWarning("Porod operation haven't been done.")
+
+        invQ=bf.integralInvariant(data['x'], data['y'], num_value['Rg'], num_value['I0'], num_value['PorodConstantK'])
+        result={**num_value,**{'InvariantQ':invQ}}
+        return {'data': data,
+                'num_value':result}
 
 #------------------------------------------------------------------------------
-class NormalizationSAXS(ProcessingFunction):
-    function_text = 'SAXS Normalization'
+class TParameter(ProcessingFunction):
+    function_text = 'T Parameter'
+    function_tip = 'Calculate T-parameter from SAXS curve I~q. Integral invariant are required in advance.'
+
+    def __init__(self):
+        super().__init__()
+
+    def run_function(self, num_value):
+        self.param_validation()
+        # self.isData1D()
+
+        if not 'InvariantQ' in num_value:
+            raise RuntimeWarning("Integral invariant haven't been calculated.")
+
+        t_parameter=4*num_value['InvariantQ']/np.pi/num_value['PorodConstantK']
+        result={**num_value,**{'T_Parameter':t_parameter}}
+        return {'data':{'value':t_parameter},
+                'plot':{'type':'2DP',
+                        'data':{'value':t_parameter}},
+                'num_value':result
+                }
+
+
+#------------------------------------------------------------------------------
+class BgSubSAXS(ProcessingFunction):
+    function_text = 'Background Subtraction'
     function_tip = '(I_sample-noise)/Ic_sample*coeff_sample*-(I_bg-noise)/Ic_bg*coeff_bg.'
     
     # Any:Any 注意一维二维均适用情况，显示的差别-需要判断，后续加入
@@ -344,3 +483,47 @@ class NormalizationSAXS(ProcessingFunction):
             raise ValueError("'Ic Monitor' must be selected!")
 
 
+# ------------------------------------------------------------------------------
+class Resolution(ProcessingFunction):
+    function_text = 'Instrumental Resolution Calculation'
+    function_tip = 'Need AgBE standard sample test and pre-PeakFitting'
+
+    # Any:Any 注意一维二维均适用情况，显示的差别-需要判断，后续加入
+
+    def __init__(self):
+        super().__init__()
+        self._params_dict['peak_fwhm'] = {'type': 'float', 'value': None, 'text': 'FWHM',
+                                          'tip': 'fwhm of standard sample peak'}
+        self._params_dict['peak_center'] = {'type': 'float', 'value': None, 'text': 'Peak center',
+                                            'tip': 'center of 2theta peak'}
+        self._params_dict['wavelength'] = {'type': 'float', 'value': None, 'text': 'Wavelength'}
+        self._params_dict['wave_dist'] = {'type': 'float', 'value': None, 'text': 'Wavelength Distribution',
+                                          'tip': 'same to energy resolution'}
+        self._params_dict['size'] = {'type': 'float', 'value': None, 'text': 'Sample Size',
+                                     'tip': 'size of standard sample'}
+
+    def run_function(self, data):
+        self.param_validation()
+
+        # if self.isData2D():
+        data['xdev'] = bf.normalizeSAXS(data['x'], self.get_param_value('peak_fwhm'),
+                                        self.get_param_value('peak_center'), self.get_param_value('wavelength'),
+                                        self.get_param_value('wave_dist'), self.get_param_value('size'))
+
+        return {'data': data,
+                'plot': {'type': '1DP',
+                         'data': {'x': data['x'], 'y': data['xdev']},
+                         }
+                }
+
+    def param_validation(self):
+        if self.get_param_value('peak_fwhm') is None:
+            raise ValueError("FWHM must be input!")
+        if self.get_param_value('peak_center') is None:
+            raise ValueError("Peak Center must be input!")
+        if self.get_param_value('wavelength') is None:
+            raise ValueError("Wavelength must be input!")
+        if self.get_param_value('wave_dist') is None:
+            raise ValueError("Wavelength distribution must be input!")
+        if self.get_param_value('size') is None:
+            raise ValueError("Sample size must be input!")

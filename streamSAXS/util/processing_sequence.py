@@ -1,3 +1,4 @@
+from enum import Enum
 import os
 from abc import abstractmethod
 from collections import OrderedDict
@@ -44,6 +45,14 @@ class ProcessingFunction(object):
 
     def get_param_value(self, key):
         if key in self._params_dict:
+            # if self._params_dict[key]["type"] == "enum":
+            #     return self._params_dict[key]["value"].value
+            return self._params_dict[key]["value"]
+
+    def get_plan_param_value(self, key):
+        if key in self._params_dict:
+            if self._params_dict[key]["type"] == "enum":
+                return self._params_dict[key]["value"].value
             return self._params_dict[key]["value"]
 
     def get_param(self, key):
@@ -51,6 +60,9 @@ class ProcessingFunction(object):
 
     def get_params(self):
         return self._params_dict
+
+    def get_params_key(self):
+        return list(self._params_dict.keys())
 
     def set_param(self, key, value):
         if self._params_dict[key]["type"] == "str":

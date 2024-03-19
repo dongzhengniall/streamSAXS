@@ -37,35 +37,36 @@ class MainWidget(QMainWindow):
         self.setWindowTitle("高能同步辐射光源")
         self.setWindowIcon(QIcon(os.getcwd()+"/ui/icons/icon.png"))
 
-        # self.statusBar()
-        # menubar = self.menuBar()
-        # menubar.setNativeMenuBar(False)
-        # file_menu = menubar.addMenu('File')
-        # view_menu = menubar.addMenu('View')
-        # help_menu = menubar.addMenu('Help')
-        #
-        # # 给menu创建一个Action
-        # exit_action = QAction(QIcon('exit.png'), 'Exit', self)
-        # exit_action.setStatusTip('Exit Application')
-        # exit_action.triggered.connect(qApp.quit)
-        # # 将这个Action添加到fileMenu�?
-        # file_menu.addAction(exit_action)
-        #
-        # # 给menu创建一个Action
-        # help_action = QAction(QIcon('exit.png'), 'Help', self)
-        # help_action.setStatusTip('Help')
-        # help_action.triggered.connect(self.load_html)
-        # # 将这个Action添加到fileMenu�?
-        # help_menu.addAction(help_action)
-        #
-        # # 给menu创建一个Action
-        # view_action = QAction('View', self)
-        # view_action.triggered.connect(self.show_view)
-        # # 将这个Action添加到fileMenu�?
-        # view_menu.addAction(view_action)
-        # edit = view_menu.addMenu('1d plot')
-        # edit.addAction(view_action)
-        # edit.addAction(view_action)
+        self.statusBar()
+        menubar = self.menuBar()
+        menubar.setNativeMenuBar(False)
+        file_menu = menubar.addMenu('File')
+        script_menu = menubar.addMenu('Script')
+        help_menu = menubar.addMenu('Help')
+
+        # 给menu创建一个Action
+        exit_action = QAction(QIcon('exit.png'), 'Exit', self)
+        exit_action.setStatusTip('Exit Application')
+        exit_action.triggered.connect(qApp.quit)
+        file_menu.addAction(exit_action)
+
+        # 给menu创建一个Action
+        help_action = QAction(QIcon('exit.png'), 'Development Description', self)
+        help_action.setStatusTip('Development Description')
+        help_action.triggered.connect(self.load_html)
+        help_menu.addAction(help_action)
+
+        function_action = QAction(QIcon('exit.png'), 'Function Description', self)
+        function_action.setStatusTip('Function Description')
+        function_action.triggered.connect(self.load_pdf)
+        help_menu.addAction(function_action)
+
+        # 给menu创建一个Action
+        script_action = QAction(QIcon('exit.png'), 'Load Script', self)
+        script_action.setStatusTip('Load Script')
+        script_action.triggered.connect(self.load_script)
+        script_menu.addAction(script_action)
+
 
         self.processing_operate_widget = ProcessingOperateWidget()
         self.setDockNestingEnabled(True)
@@ -82,7 +83,7 @@ class MainWidget(QMainWindow):
         self.add_plot1d_widget("I(chi)")
         #self.add_visualizer2d_widget("2D integration")
         self.add_plot2d_widget("2D plot")
-        self.add_plot2d_widget("2D")
+        self.add_visualizer2d_widget("visualizer2d 2D")
 
         # put the widget text name to processing widget to select
         self.processing_operate_widget.processing_widget.plot1d_widget_dict = self.plot1d_widget_dict
@@ -121,45 +122,26 @@ class MainWidget(QMainWindow):
         self.typesetting_plot1d()
         self.typesetting_visualizer2d()
         self.typesetting_plot2d()
-        
-        self.processing_operate_widget.processing_widget.processing_list.add_step_in_data("Load Data File",
-                                                                                          LoadH5Data(), [])
-        self.processing_operate_widget.processing_widget.processing_list.add_step_in_data(
-            "Detector Calibration via PyFAI", DetectorCalibrationPyFAI(), [1])
-        self.processing_operate_widget.processing_widget.processing_list.add_step_in_data(
-            "Threshold Mask 2D", ThresholdMask2D(), [2])
-        self.processing_operate_widget.processing_widget.processing_list.add_step_in_data(
-            "Azimuthal Integration", IntegrateAzimuthal(), [3])
-        # self.processing_operate_widget.processing_widget.processing_list.add_step_in_data(
-        #     "Radial Integration", IntegrateRadial(), [3])
-        # self.processing_operate_widget.processing_widget.processing_list.add_step_in_data(
-        #     "Integration Plot", IntegrationPlot(), [4])
 
-        self.processing_operate_widget.processing_widget.processing_list.add_step_in_data(
-            "SinglePeakFit", SinglePeakFit(), [4])
-        self.processing_operate_widget.processing_widget.processing_list.add_step_in_data(
-            "T-Parameters", TParameters(), [5])
-        self.processing_operate_widget.processing_widget.processing_list.add_step_in_data(
-            "SinglePeakFitPlot", SinglePeakFitPlot(), [5])
-
-        self.processing_operate_widget.processing_widget.processing_list[3].step_connect_widget = list(self.plot1d_widget_dict.keys())[0]
-        self.processing_operate_widget.processing_widget.processing_list[4].step_connect_widget = \
-        list(self.plot1d_widget_dict.keys())[1]
-        self.processing_operate_widget.processing_widget.processing_list[5].step_connect_widget = \
-            list(self.plot2d_widget_dict.keys())[0]
-        self.processing_operate_widget.processing_widget.processing_list[6].step_connect_widget = \
-            list(self.plot2d_widget_dict.keys())[1]
         self.processing_operate_widget.processing_widget.update_steps_tableWidget()
 
     def load_html(self):
         print(QFileInfo(".help.html").absoluteFilePath())
         QtGui.QDesktopServices.openUrl(QtCore.QUrl(QFileInfo("doc_help/help.html").absoluteFilePath()))
 
+    def load_pdf(self):
+        print("load PDF")
+        # print(QFileInfo(".help.html").absoluteFilePath())
+        # QtGui.QDesktopServices.openUrl(QtCore.QUrl(QFileInfo("doc_help/help.html").absoluteFilePath()))
+
+    def load_script(self):
+        print("load script")
+
     def show_view(self):
         print(self.plot1d_widget_dict)
 
     def change_window_name(self, type, id):
-        text, ok = QInputDialog.getText(self, '窗口改名', '请输入修改后的名字：')
+        text, ok = QInputDialog.getText(self, 'window name', 'please input the window name')
         if ok and text != "":
             if text not in self.dock_name:
                 if type == "plot1d":

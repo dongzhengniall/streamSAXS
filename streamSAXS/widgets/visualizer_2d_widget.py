@@ -28,12 +28,12 @@ class Visualizer2DWidget(QWidget):
         self.navbar = QToolBar()
         self.navbar.setIconSize(QSize(30, 30))
         self.navbar.setStyleSheet("font-size:25px;")
-        self.navbar.addAction(QIcon(os.getcwd()+'/xrd/ui/icons/load.png'), "Load Image in File", self.load_image_in_file)
+        self.navbar.addAction(QIcon(os.getcwd()+'/ui/icons/load.png'), "Load Image in File", self.load_image_in_file)
         # self.navbar.addAction(QIcon('widgets/ui/icons/save.png'), "Save Image To File")
         self.navbar.addSeparator()
 
         # ROI Action---------------------------------------
-        self.roi_action = QAction(QIcon(os.getcwd()+'/xrd/ui/icons/button_line.png'), "ROI Line")
+        self.roi_action = QAction(QIcon(os.getcwd()+'/ui/icons/button_line.png'), "ROI Line")
         self.roi_action.setCheckable(True)
         self.navbar.addAction(self.roi_action)
         self.roi = False
@@ -44,7 +44,7 @@ class Visualizer2DWidget(QWidget):
 
         # Crop Action----------------------------------------
         crop_menu = QMenu(self)
-        crop_action = crop_menu.addAction(QIcon('ui/icons/crop.png'), "crop image", self.add_crop_roi)
+        crop_action = crop_menu.addAction(QIcon(os.getcwd()+'/ui/icons/crop.png'), "crop image", self.add_crop_roi)
         crop_panel = QMenu(self)
         crop_action.setMenu(crop_panel)
         self.crop_range_edit = {}
@@ -68,7 +68,7 @@ class Visualizer2DWidget(QWidget):
 
         # Auto levels Action----------------------------------------
         level_menu = QMenu(self)
-        self.level_action = level_menu.addAction(QIcon(os.getcwd()+'/xrd/ui/icons/button_range.png'), "Level")
+        self.level_action = level_menu.addAction(QIcon(os.getcwd()+'/ui/icons/button_range.png'), "Level")
         self.level_action.setCheckable(True)
         level_panel = QMenu(self)
         self.level_action.setMenu(level_panel)
@@ -105,12 +105,12 @@ class Visualizer2DWidget(QWidget):
         # imageview---------------------------------------------------
         self.plot_item = pg.PlotItem()
         self.image_view = pg.ImageView(view=self.plot_item)
+        #self.image_view = pg.ImageView(view=self.plot_item,discreteTimeLine=True) #############董政20221015增加discreteTimeLine=True
         self.layout.addWidget(self.image_view)
         self.image_view.setPredefinedGradient('thermal')
         self.plot_item.scene().sigMouseMoved.connect(self.mouse_moved_axies)
         self.plot_item.scene().sigMouseClicked.connect(self.set_roi_line)
         self.image = None
-
         self.init = True
 
     def navbar_triggered(self, name):
@@ -190,7 +190,7 @@ class Visualizer2DWidget(QWidget):
     def mouse_moved_axies(self, pos):
         if self.plot_item.vb.sceneBoundingRect().contains(pos):
             mousePoint = self.plot_item.vb.mapSceneToView(pos)
-            posx, posy = mousePoint.x(), mousePoint.y()
+            posx, posy= mousePoint.x(), mousePoint.y()
             axisx = " "
             if self.ticksx and posx >= 0:
                 for i in range(len(self.ticksx)):
@@ -293,8 +293,9 @@ class Visualizer2DWidget(QWidget):
             location = ["left", "right", "top", "bottom"]
             for l in location:
                 self.plot_item.setLabel(l, "")
-        if "title" in plot:
-            self.plot_item.setTitle(str(plot["message"]))
+        if "title" in plot :
+            self.plot_item.setTitle(str(plot["title"]))
+            ###################################
         else:
             self.plot_item.setTitle("")
 
@@ -305,6 +306,8 @@ class Visualizer2DWidget(QWidget):
             self.plot_item.setYRange(0, len(y) - 1)
             ox = np.linspace(0, len(x) - 1, len(x))
             oy = np.linspace(0, len(y) - 1, len(y))
+
+            #################################
             self.ticksx = [[i, round(j, 3)] for i, j in zip(ox, x)]
             ticksx_show = []
             if len(x) > 10:
@@ -339,11 +342,12 @@ class Visualizer2DWidget(QWidget):
         self.get_roi_value()
 
     def update_data(self, plot):
+        # print(plot)
         if self.init:
             self.init = False
             self.init_plot_item(plot)
         if "title" in plot:
-            self.plot_item.setTitle(str(plot["message"]))
+            self.plot_item.setTitle(str(plot["title"]))
         else:
             self.plot_item.setTitle("")
         if plot["type"] == "2DXY":
@@ -351,7 +355,10 @@ class Visualizer2DWidget(QWidget):
             self.update_image_data(image)
         else:
             image = plot["data"]
+            # self.image=image
             self.update_image_data(image)
+
+
 
 
 if __name__ == '__main__':
