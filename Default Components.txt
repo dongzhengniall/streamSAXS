@@ -1,0 +1,207 @@
+List of  Default Components
+
+{Calibration}
+->Detector Calibration via PyFAI
+ 	Detector geometric distortion correction via .poni file generated from PyFAI.
+	->Options
+	File: Enter the Calibration File
+
+->Detector Calibration via Fit2d
+	Detector geometric distortion correction via fit2d parameters.
+	->Options
+	Wavelength: unit in Angstrom
+	Distance: sample-to-detector, unit in mm
+	Beam Center X: unit in Pixel
+	Beam Center Y: unit in Pixel
+	X Pixel Size: unit in microns
+	Y Pixel Size: unit in microns
+	Rotation Angle: unit in Degree
+	Tilt in Plane: unit in Degree
+
+{CurveOperation}
+->CurveCrop
+	Valid data selection of 1-D curve.
+	->Options
+	Strat: unit in index
+	End: unit in index
+
+->CurvePositive
+	Reserve positive data.
+	->Options
+	None
+
+{Filter}
+->Bilateral
+	Bilateral Filter.
+	->Options
+
+->Blur
+	Blur Filter.
+	->Options
+
+->GaussianBlur
+	Gaussian Blur Filter.
+	->Options
+
+->MedianBlur
+	Median Blur Filter.
+	->Options
+
+{ImageOperation}
+->Image Flip
+	Flip the Image.
+	->Options
+	Direction: Along vertical (Y) Axis or along horizontal (X) Axis
+
+->Peak Numbers
+	Calculation of peak numbers within diffraction pattern.
+	->Options
+	Minimum area of single peaks:
+	Maximum intensity:
+
+{Integration}
+->Integration 2D
+	2-D integration via importing PyFAI.
+	->Options
+	Number of radial points: default to 1000
+	Radial Range Unit: q (nm^-1), q (A^-1), 2theta (degree), 2theta (rad), and r (mm) are available
+	Radial Range:  None for simply (min,max)
+	Number of Azimuthal points: default to 360
+	Azimuth Range: None for simply (min,max)
+	Polarization Factor: -1 (vertical) ~ +1 (horizontal), 0 for circular or random, and none for no correction
+	Flat field file: file path used for flat-field correction 
+	Dark current file: file path used for dark-current correction
+
+->Azimuthal Integration 
+	1-D integration for I~q/2theta/r via importing PyFAI.
+	->Options
+	Number of output points: number of azimuthal points
+	Output Unit: q (nm^-1), q (A^-1), 2theta (degree), 2theta (rad), and r (mm) are available
+	Radial Range:  None for simply (min,max)
+	Azimuth Range: None for simply (min,max)
+	Polarization Factor: -1 (vertical) ~ +1 (horizontal), 0 for circular or random, and none for no correction
+	Flat field file: file path used for flat-field correction 
+	Dark current file: file path used for dark-current correction
+
+->Radial Integration 
+	1-D integration for I~chi via importing PyFAI.
+	->Options
+	Number of output points: number of azimuthal points
+	Output Unit: chi (degree) and chi (rad) are available
+	Azimuth Range: None for simply (min,max)
+	Number of radial points: number of radial points
+	Radial Range Unit: q (nm^-1), q (A^-1), 2theta (degree), 2theta (rad), and r (mm) are available
+	Radial Range:  None for simply (min,max)
+	Polarization Factor: -1 (vertical) ~ +1 (horizontal), 0 for circular or random, and none for no correction
+	Flat field file: file path used for flat-field correction 
+	Dark current file: file path used for dark-current correction
+
+-> Radial Integration & Background Subtraction
+	1-D integration for I~chi via importing PyFAI following with background Subtraction with intensity at ±delta q
+	->Options
+	Number of output points: number of azimuthal points
+	Output Unit: chi (degree) and chi (rad) are available
+	Azimuth Range: None for simply (min,max)
+	Number of radial points: number of radial points
+	Radial Range Unit: q (nm^-1), q (A^-1), 2theta (degree), 2theta (rad), and r (mm) are available
+	Radial Range:  None for simply (min,max)
+	Polarization Factor: -1 (vertical) ~ +1 (horizontal), 0 for circular or random, and none for no correction
+	Lower Range: value of q plus delta q
+	Higher Range: value of q minus delta q
+	Flat field file: file path used for flat-field correction 
+	Dark current file: file path used for dark-current correction
+
+{IO}
+->Load Data File
+	Data Loading.
+	->Options
+
+->Save Data
+	Data storage.
+	->Options
+
+{Maksing}
+->Threshold Mask 2D
+	Threshold Mask to 2-D image.
+	->Options
+	Min Value: minimum threshold of intensity
+	Max Value: maximum threshold of intensity
+
+->User-defined Mask 1D
+	User-defined regions in 1-D curves will be skipped.
+	->Options
+	Masked regions: unit in X index, the number of index in tuple must be even
+
+->User-defined Mask 2D
+	Import user-defined mask file.
+	Mask File: file path of mask
+
+{Recon}
+->Sinogram
+	Sinogram calculation.
+	->Options
+
+->Reconstruction
+	Reconstruction.
+	->Options
+
+{SAXS}
+->Background Subtraction
+	Subtraction of background scattering and Normalization.
+	->Options
+	Ic Monitor: monitor of transmitted beam for sample exposure
+	Normalization Coefficient: default to 1
+	Detector Noise: value set as the fixed noise of detector
+	Background: background file
+	Background Ic Monitor: monitor of transmitted beam for background exposure
+	Background Normalization Coefficient: default to 1
+
+->Guinier Operation
+	Guinier Plotting and Fitting.
+	->Options
+	Guinier Fit: If "False", Guinier curve will be displayed but Guinier fitting won't be done
+	Auto Calculation for Guinier region: If "True", q range for Guinier Fitting is automatically calculated
+ 	Guinier region: (q_idx_min, q_idx_max), unit in index, used when "Auto Calculation for Guinier region" is set as "False"
+	Rg: fitted radius of gyration
+	I0: fitted intensity at q=0
+
+->Integral Invariant
+	Calculation of integral invariant Qinv. Porod and Guinier operations are required in advance.
+	->Options
+	None
+
+->Porod Operation
+	Porod calculation and correction.
+	->Options
+	Porod Fit: if "True", porod fit is done
+	Porod Correction: if "True", porod correction is done
+	high q linear range: (min, max) in pixel, needed when "Porod Correction" is set as "True"
+	PorodSlope: fitted slope of porod curve
+	PorodLnk: fitted lnk
+	PorodConstantk: fitted porod constant (k)
+
+->T Parameter
+	Calculation of T Parameter.
+	->Options
+	None
+
+{Segmentation}
+->Interactive Threshold
+	->Options
+
+->K-means Segmentation
+	->Options
+
+{XRD}
+->
+		
+
+	
+
+
+
+
+
+
+
+	
