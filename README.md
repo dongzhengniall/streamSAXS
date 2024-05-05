@@ -34,7 +34,7 @@ BioXTAS RAW <br>
    Load 2D Data -->  "RawData" widget <br>
    Radial Integration & Background Subtraction --> "I(chi)" widget <br>
    Single Peak Fitting --> "PeakFit" widget <br>
-   Single Peak Fitting Plot --> plot2d widget, set the number of X/Y within plot2d widget <br>
+   Single Peak Fitting Plot --> plot2d widget, set X=101/Y=10 within plot2d widget <br>
 4. Run the workflow <br>
    
 ## Documentation <br>
