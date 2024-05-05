@@ -1,0 +1,68 @@
+plan_name: saxs.yaml
+scan_steps:
+- file_info: G:/dongzheng/XRD_code/code/xrd20240501/example/data tiff
+  processing_input_number: []
+  processing_name: IO.Load 2D Data
+- calibration_file: G:/dongzheng/XRD_code/code/xrd20240501/example/calibration.poni
+  processing_input_number:
+  - 1
+  processing_name: Calibration.Detector Calibration via PyFAI
+- mask_file: G:/dongzheng/XRD_code/code/xrd20240501/example/mask01.edf
+  processing_input_number:
+  - 2
+  processing_name: Masking.User-defined Mask 2D
+- azimuth_range:
+  - 80.0
+  - 100.0
+  error: false
+  npt: 500
+  out_unit: q (nm^-1)
+  polarization_factor: 0.99
+  processing_input_number:
+  - 3
+  processing_name: Integration.Azimuthal Integration
+  radial_range: null
+- end: 288
+  processing_input_number:
+  - 4
+  processing_name: CurveOperation.Curve Crop
+  start: 0
+- index:
+  - 39
+  - 50
+  processing_input_number:
+  - 5
+  processing_name: Masking.User-defined Mask 1D
+- index:
+  - 152
+  - 159
+  processing_input_number:
+  - 6
+  processing_name: Masking.User-defined Mask 1D
+- PorodConstantK: 252.6642104282954
+  PorodLnK: 5.532061375666966
+  PorodSlope: 0.20549488974949967
+  correction: true
+  fit: true
+  processing_input_number:
+  - 7
+  processing_name: SAXS.Porod Operation
+  q_range:
+  - 170
+  - 267
+- I0: 24821.559566276697
+  Rg: 22.71493453995313
+  autoFit: false
+  isGuinierFit: true
+  processing_input_number:
+  - 8
+  processing_name: SAXS.Guinier Operation
+  q_range:
+  - 0
+  - 8
+- processing_input_number:
+  - 9
+  processing_name: SAXS.Integral Invariant
+- processing_input_number:
+  - 10
+  processing_name: SAXS.T Parameter

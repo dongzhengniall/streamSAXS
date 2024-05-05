@@ -1,0 +1,57 @@
+plan_name: PeakFit.yaml
+scan_steps:
+- file_info: G:/dongzheng/XRD_code/code/xrd20240501/example/data tiff
+  processing_input_number: []
+  processing_name: IO.Load 2D Data
+- calibration_file: G:/dongzheng/XRD_code/code/xrd20240501/example/calibration.poni
+  processing_input_number:
+  - 1
+  processing_name: Calibration.Detector Calibration via PyFAI
+- mask_file: G:/dongzheng/XRD_code/code/xrd20240501/example/mask01.edf
+  processing_input_number:
+  - 2
+  processing_name: Masking.User-defined Mask 2D
+- azimuth_range:
+  - -50.0
+  - 20.0
+  npt: 120
+  npt_radial: 100
+  out_unit: chi (rad)
+  polarization_factor: 0.99
+  processing_input_number:
+  - 3
+  processing_name: Integration.Radial Integration & Background Subtraction
+  radial_range:
+  - 0.28
+  - 0.31
+  radial_range_high:
+  - 0.31
+  - 0.33
+  radial_range_low:
+  - 0.26
+  - 0.28
+  radial_unit: q (nm^-1)
+- area: 0.46320625127532244
+  autoFit: true
+  d: -6.5852526638190625
+  fixedArea: false
+  fixedFWHM: false
+  fixedIntercept: false
+  fixedPeakCenter: false
+  fixedRatio: false
+  fixedSlope: false
+  fwhm: 0.9647415006324545
+  k: -5.888474774832433
+  n: null
+  peak_center: 0.12361781118383461
+  peak_type: Vogit+LinearBg
+  processing_input_number:
+  - 4
+  processing_name: XRD.Single Peak Fitting
+  x_range:
+  - -0.8
+  - 0.3
+- plotLable: PeakPos
+  processing_input_number:
+  - 5
+  processing_name: XRD.Single Peak Fitting Plot
