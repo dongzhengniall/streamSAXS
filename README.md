@@ -18,7 +18,7 @@ BioXTAS RAW <br>
 -->https://bioxtas-raw.readthedocs.io/en/latest/install.html <br>
 <br>
 ## Running Example <br>
-1. Import PeakFit.yaml workflow file <br>
+1. Import workflow file --> \example\PeakFit.yaml <br>
 2. Select input <br>
    Load 2D Data --> \example\data\ <br>
    Detector Calibration via PyFAI --> \example\calibration.poni <br>
