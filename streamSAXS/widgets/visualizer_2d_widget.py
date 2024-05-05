@@ -26,8 +26,8 @@ class Visualizer2DWidget(QWidget):
         self.layout.setContentsMargins(0, 0, 0, 0)
 
         self.navbar = QToolBar()
-        self.navbar.setIconSize(QSize(30, 30))
-        self.navbar.setStyleSheet("font-size:25px;")
+        self.navbar.setIconSize(QSize(20, 20))
+        self.navbar.setStyleSheet("font-size:15px;")
         self.navbar.addAction(QIcon(os.getcwd()+'/ui/icons/load.png'), "Load Image in File", self.load_image_in_file)
         # self.navbar.addAction(QIcon('widgets/ui/icons/save.png'), "Save Image To File")
         self.navbar.addSeparator()
@@ -203,8 +203,12 @@ class Visualizer2DWidget(QWidget):
                     if int(self.ticksy[i][0]) == int(posy):
                         axisy = round(self.ticksy[i][1], 3)
                         break
-            labels = "pixel:x=" + str(round(posx)) + " y=" + str(round(posy)) + \
+            if self.image is not None and int(posy)<self.image.shape[0] and int(posx)<self.image.shape[1]:
+                labels = "pixel:x=" + str(round(posx)) + " y=" + str(round(posy)) + "    gray:"+str(self.image[int(posy), int(posx)]) +\
                      "  axies:x=" + str(axisx) + " y=" + str(axisy)
+            else:
+                labels = "pixel:x=" + str(round(posx)) + " y=" + str(round(posy))+ \
+                         "  axies:x=" + str(axisx) + " y=" + str(axisy)
             self.axis_label.setText(labels)
 
     def add_crop_roi(self):

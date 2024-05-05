@@ -95,7 +95,7 @@ class Runthread(QtCore.QThread):
                                                 return
                                     self.skip_step.append(i)
                             else:#######################################################################
-                                file_info = param_dict[key]["value"].split()
+                                file_info = param_dict[key]["value"].split("*")
                                 data_1d = {"x":IoHdf5.Load_H5_Data(file_info[0], file_info[1]),
                                            "y":IoHdf5.Load_H5_Data(file_info[0], file_info[2])}
                                 self.data_in_memory[i][key] = data_1d
@@ -317,7 +317,7 @@ class ProcessingOperateWidget(QWidget):
         super(ProcessingOperateWidget, self).__init__(parent)
         # ToolBar-------------------------------------------------------------------------------------
         self.navbar = QToolBar()
-        self.navbar.setIconSize(QSize(30, 30))
+        self.navbar.setIconSize(QSize(20, 20))
         self.action_play = QAction("RUN", self)
         self.action_play.setIcon(QIcon(os.getcwd()+'/ui/icons/playback-play.png'))
         self.action_play.triggered.connect(self.start_work)
@@ -749,7 +749,7 @@ class ProcessingWidget(QWidget, Ui_processing_widget):
         if dialog.exec_():
             file_info = dialog.file_info
             if "file" in file_info and "x_dataset" in file_info and "y_dataset" in file_info:
-                select.setText('{} {} {}'.format(file_info["file"], file_info["x_dataset"], file_info["y_dataset"]))
+                select.setText('{}*{}*{}'.format(file_info["file"], file_info["x_dataset"], file_info["y_dataset"]))
 
     def file_select_button_clicked(self, file_select):
         file_name, file_type = QFileDialog.getOpenFileName(self, "getOpenFileName", "./",

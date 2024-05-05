@@ -14,7 +14,7 @@ class UserDefinedMask2D(ProcessingFunction):
 
     def __init__(self):
         super().__init__()
-        self._params_dict["mask_file"] = {"type": "file", "value": "E:/dongzheng/XRD_code/code/testdata/mouse/parameter/mask01.tif", "text": "Mask File",
+        self._params_dict["mask_file"] = {"type": "file", "value": None, "text": "Mask File",
                                           "tip": "File extensions such as '.tif', '.edf' are recommended."}
 
     def run_function(self, data, **kwargs):
@@ -60,7 +60,7 @@ class UserDefinedMask1D(ProcessingFunction):
 
     def __init__(self):
         super().__init__()
-        self._params_dict["index"] = {"type": "tuple_int", "value": (39,50,164,172), "text": "Masked regions (X index)"}
+        self._params_dict["index"] = {"type": "tuple_int", "value": None, "text": "Masked regions (X index)"}
 
     def run_function(self, data, label):
         self.param_validation()

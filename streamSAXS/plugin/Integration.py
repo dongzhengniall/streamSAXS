@@ -86,7 +86,7 @@ class IntegrateAzimuthal(ProcessingFunction): # with error
         super().__init__()
         self._params_dict["npt"] = {"type": "int", "value": 500, "text": "Number of output points"}
         self._params_dict["out_unit"] = {"type": "enum", "value": IntegrateAzimuthal_Unit.unit1, "text": "Output Unit"}
-        self._params_dict["radial_range"] = {"type": "tuple_float", "value": (10,25), "text": "Radial Range",
+        self._params_dict["radial_range"] = {"type": "tuple_float", "value": None, "text": "Radial Range",
                                              "tip": "(Inner Limit,Outer Limit).Unit is same as 'Output Unit'.If not provided, range is simply (min, max)."}
         self._params_dict["azimuth_range"] = {"type": "tuple_float", "value": (-180,180), "text": "Azimuth Range",
                                               "tip": "(Lower angle, upper angle) in degree. Angle must between -180 and 180. 0 degree is in the direction of the left horizontal line. [Clockwise]. If not provided, range is simply (min, max)."}
@@ -353,20 +353,20 @@ class IntegrateRadial_BgDel(ProcessingFunction):
         else:
             mask = None
 
-        result1d = bf.integrateRadial(objectset['integrator'], data['image'], mask,
+        result1d = bf.integrateRadial(objectset['integrator'], data['image'], mask=mask,
                                       npt=self.get_param_value("npt"), npt_rad=self.get_param_value("npt_radial"),
                                       unit=azimuthUnit, azimuth_range=self.get_param_value("azimuth_range"),
                                       radial_unit=radialUnit, radial_range=self.get_param_value("radial_range"),
                                       polarization_factor=self.get_param_value("polarization_factor")
                                       )
 
-        resultBgLow = bf.integrateRadial(objectset['integrator'], data['image'], mask,
+        resultBgLow = bf.integrateRadial(objectset['integrator'], data['image'], mask=mask,
                                          npt=self.get_param_value("npt"), npt_rad=self.get_param_value("npt_radial"),
                                          unit=azimuthUnit, azimuth_range=self.get_param_value("azimuth_range"),
                                          radial_unit=radialUnit, radial_range=self.get_param_value("radial_range_low"),
                                          polarization_factor=self.get_param_value("polarization_factor")
                                          )
-        resultBgHigh = bf.integrateRadial(objectset['integrator'], data['image'], mask,
+        resultBgHigh = bf.integrateRadial(objectset['integrator'], data['image'], mask=mask,
                                           npt=self.get_param_value("npt"), npt_rad=self.get_param_value("npt_radial"),
                                           unit=azimuthUnit, azimuth_range=self.get_param_value("azimuth_range"),
                                           radial_unit=radialUnit,

@@ -23,7 +23,7 @@ def get_classes(arg):
 def get_file_name_from_path(file_path, file_type):
     all_file_name_list = os.listdir(file_path)
     file_name_list = [file_name[:-len(file_type)] for file_name in all_file_name_list if file_name[-len(file_type):] == file_type]
-    file_path_list = [file_path + "\\" + file_name+file_type for file_name in file_name_list]
+    file_path_list = [os.path.join(file_path , file_name+file_type) for file_name in file_name_list]
     return {"file_name_list": file_name_list, "file_path_list": file_path_list}
 
 

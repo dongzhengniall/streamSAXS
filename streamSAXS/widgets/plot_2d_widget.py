@@ -6,7 +6,7 @@ from PyQt5 import QtGui
 from PyQt5.QtCore import QSize
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QApplication, QToolBar, QFileDialog, QComboBox, QDialog, QHBoxLayout,
-                             QLabel, QLineEdit, QFormLayout, QPushButton)
+                             QLabel, QLineEdit, QFormLayout, QPushButton, QSizePolicy)
 from PIL import Image
 
 
@@ -86,10 +86,16 @@ class Plot2DWidget(QWidget):
         self.layout.setSpacing(0)
         self.layout.setContentsMargins(0, 0, 0, 0)
         self.navbar = QToolBar()
-        self.navbar.setIconSize(QSize(30, 30))
+        self.navbar.setIconSize(QSize(20, 20))
         self.navbar.addAction(QIcon(os.getcwd()+'/ui/icons/settings'), "Mapping Setting", self.set_mapping_setting)
         self.navbar.addAction(QIcon(os.getcwd()+'/ui/icons/save.png'), "Save Image in File", self.save_image_to_file)
         self.navbar.addAction(QIcon(os.getcwd()+'/ui/icons/load.png'), "Load Image in File", self.load_image_in_file)
+        spacer = QWidget()
+        spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.navbar.addWidget(spacer)
+        self.axis_label = QLabel("")
+        self.navbar.addWidget(self.axis_label)
+
         self.layout.addWidget(self.navbar)
         self.layout.addWidget(self.win)
 
@@ -98,6 +104,19 @@ class Plot2DWidget(QWidget):
         self.data = None
         self.init = 1
         self.mapping_setting = {"shape": "Z Shape", "direction": "left_right"}
+        self.p1.scene().sigMouseMoved.connect(self.mouse_moved_axies)
+
+
+    def mouse_moved_axies(self, pos):
+        if self.p1.vb.sceneBoundingRect().contains(pos):
+            mousePoint = self.p1.vb.mapSceneToView(pos)
+            posx, posy = mousePoint.x(), mousePoint.y()
+            if self.data is not None and int(posy) < self.data.shape[0] and int(posx) < self.data.shape[1]:
+                labels = "pixel:x=" + str(round(posx)) + " y=" + str(round(posy)) + "    gray:" + str(
+                    self.image[int(posy), int(posx)])
+            else:
+                labels = "pixel:x=" + str(round(posx)) + " y=" + str(round(posy))
+            self.axis_label.setText(labels)
 
     def set_mapping_setting(self):
         dialog = MappingSettingDialog(self.mapping_setting, self.sample_range)

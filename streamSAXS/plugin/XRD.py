@@ -187,7 +187,7 @@ class SinglePeakFitPlot_Type(Enum):
     unit3 = 'PeakFWHM'
     unit4 = 'PeakIntensity'
     unit5 = 'ROIPeakIntensity'
-
+"""
 class SinglePeakFit2D(ProcessingFunction):
     function_text = 'Single Peak Fitting 2D'
     function_tip = '2D Gaussion fitting of single peak'
@@ -215,7 +215,7 @@ class SinglePeakFit2D(ProcessingFunction):
 @unique
 class SinglePeakFit2D_PeakType(Enum):
     type1 = "Gaussian"
-
+"""
 
 class ROIPeak(ProcessingFunction):
     function_text = 'ROI Peak Intensity'

@@ -140,7 +140,7 @@ class GuinierOperation(ProcessingFunction):
                                              'tip': "If not selected, Guinier plot will be displayed but Guinier Fit won't be done."}
         self._params_dict['autoFit'] = {'type': 'bool', 'value': False, 'text': 'Auto Calculation for Guinier region',
                                         'tip': "If selected, q range for Guinier fit is calculated automatically. If not, Guinier fit is applied to the filled q range."}
-        self._params_dict['q_range'] = {'type': 'tuple_int', 'value': (0, 8), 'text': 'Guinier region',
+        self._params_dict['q_range'] = {'type': 'tuple_int', 'value': None, 'text': 'Guinier region',
                                         'tip': "(q_idx_min ,q_idx_max )"}
 
         self._params_dict['Rg'] = {'type': 'float', 'value': None, 'text': 'Rg', 'tip': "Rg"}
@@ -259,7 +259,7 @@ class PorodOperation(ProcessingFunction):
                                     'tip':"If selected, porod fit is done."}
         self._params_dict['correction'] = {'type': 'bool', 'value': False, 'text': 'Porod Correction',
                                            'tip':"If selected, porod correction is done and high q linear range will be needed."}
-        self._params_dict['q_range']={'type': 'tuple_int', 'value': (170,267), 'text': 'high q linear range','tip':'(min,max) in pixel'}
+        self._params_dict['q_range']={'type': 'tuple_int', 'value': None, 'text': 'high q linear range','tip':'(min,max) in pixel'}
 
         self._params_dict['PorodSlope'] = {'type': 'float', 'value': None, 'text': 'PorodSlope','tip':'PorodSlope'}
         self._params_dict['PorodLnK'] = {'type': 'float', 'value': None, 'text': 'PorodLnK', 'tip': 'PorodLnK'}
@@ -337,7 +337,7 @@ class PorodOperation(ProcessingFunction):
         if self.get_param_value('fit') is False and self.get_param_value('correction') is True:
             raise ValueError("'Porod Fit' should be selected!")
 
-
+"""
 class KratkyAnalysis(ProcessingFunction):
     function_text = 'Kratky Analysis'
     function_tip = "Kratky plot (I~q-->q~I*(q**2)) and Normalized Kratky plot (qRg)**2I(q)/I(0)  vs. qRg"
@@ -376,8 +376,7 @@ class KratkyAnalysis(ProcessingFunction):
     # def param_validation(self):
     #     if self.get_param_value('Normalized_profiles') is True and num_value is None:
     #         raise ValueError("The Guinier fit must be done!")
-
-            
+"""
 # #------------------------------------------------------------------------------
 class IntegralInvariant(ProcessingFunction):
     function_text = 'Integral Invariant'
@@ -398,6 +397,8 @@ class IntegralInvariant(ProcessingFunction):
         invQ=bf.integralInvariant(data['x'], data['y'], num_value['Rg'], num_value['I0'], num_value['PorodConstantK'])
         result={**num_value,**{'InvariantQ':invQ}}
         return {'data': data,
+                'plot': {'type': '2DP',
+                         'data': {'value': invQ}},
                 'num_value':result}
 
 #------------------------------------------------------------------------------
@@ -423,6 +424,36 @@ class TParameter(ProcessingFunction):
                 'num_value':result
                 }
 
+#-----------------------------------------------------------------------------
+class RgPlot(ProcessingFunction):
+    function_text = 'Gyration Radius Plot'
+    function_tip = '2D plot'
+
+    def __init__(self):
+        super().__init__()
+        self._params_dict["plotLabel"] = {"type": "enum", "value": SAXSPlot_Type.unit1,
+                                          "text": "Interest data"}
+
+    def run_function(self, num_value, label):
+
+        if self.get_param_value("plotLabel") == SAXSPlot_Type.unit1:
+            unit = 'Rg'
+
+        plotdata = num_value[unit]
+
+
+        return {'data': {'value':plotdata},
+                "plot": {"type": "2DP",
+                         "data": {'value': plotdata},
+                         'title': unit}
+                }
+
+
+@unique
+class SAXSPlot_Type(Enum):
+    unit1 = 'Gyration Radius'
+
+
 
 #------------------------------------------------------------------------------
 class BgSubSAXS(ProcessingFunction):
@@ -432,7 +463,7 @@ class BgSubSAXS(ProcessingFunction):
     # Any:Any 注意一维二维均适用情况，显示的差别-需要判断，后续加入
     def __init__(self):
         super().__init__()
-        self._params_dict['ic_sample'] = {'type': 'file', 'value': None, 'text': 'Ic Monitor'}##后面更改为file
+        self._params_dict['ic_sample'] = {'type': 'io', 'value': None, 'text': 'Ic Monitor'}##后面更改为file
         self._params_dict['coeff_sample'] = {'type': 'float', 'value': 1.0, 'text': 'Normalization Coefficient'}                                            
         self._params_dict['noise'] = {'type': 'float', 'value': 0.0, 'text': 'Detector Noise'}
         self._params_dict['bg'] = {'type': 'file', 'value': None, 'text': 'Background'}##后面更改为file

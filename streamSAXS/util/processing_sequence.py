@@ -117,7 +117,7 @@ class ProcessingSequence(list):
         list.__init__([])
         self._data_in_memory = {}
         self.step_object_dict = OrderedDict()
-        module_file_path = os.path.join(os.path.dirname(__file__) + '\\..\\plugin')
+        module_file_path = os.path.join(os.path.abspath(os.path.dirname(os.path.dirname(__file__))), "plugin")
         classes = get_classes_from_path(file_path=module_file_path, file_type=".py")
         classes_list = filter_classes_by_function(classes, "function_text")
 

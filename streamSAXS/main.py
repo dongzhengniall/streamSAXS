@@ -83,7 +83,7 @@ class MainWidget(QMainWindow):
         self.add_plot1d_widget("I(chi)")
         #self.add_visualizer2d_widget("2D integration")
         self.add_plot2d_widget("2D plot")
-        self.add_visualizer2d_widget("visualizer2d 2D")
+        #self.add_visualizer2d_widget("visualizer2d 2D")
 
         # put the widget text name to processing widget to select
         self.processing_operate_widget.processing_widget.plot1d_widget_dict = self.plot1d_widget_dict
@@ -159,7 +159,7 @@ class MainWidget(QMainWindow):
                 self.dock_name.remove(old_name)
                 self.dock_name.append(text)
             else:
-                msg_box = QMessageBox(QMessageBox.Warning, '警告', 'the name is exist, please change the name.')
+                msg_box = QMessageBox(QMessageBox.Warning, 'warning', 'the name is exist, please change the name.')
                 msg_box.exec_()
 
     def window_show(self, x, y, width, height):
@@ -208,7 +208,7 @@ class MainWidget(QMainWindow):
             self.typesetting_visualizer2d()
             self.dock_name.append(image_name)
         else:
-            msg_box = QMessageBox(QMessageBox.Warning, '警告', 'The name is exist, please change the name.')
+            msg_box = QMessageBox(QMessageBox.Warning, 'warning', 'The name is exist, please change the name.')
             msg_box.exec_()
 
     def add_plot1d_widget(self, image_name):
@@ -228,7 +228,7 @@ class MainWidget(QMainWindow):
             self.typesetting_visualizer2d()
             self.dock_name.append(image_name)
         else:
-            msg_box = QMessageBox(QMessageBox.Warning, '警告', '111the name is exist, please change the name.')
+            msg_box = QMessageBox(QMessageBox.Warning, 'warning', '111the name is exist, please change the name.')
             msg_box.exec_()
 
     def typesetting_plot1d(self):
@@ -261,7 +261,7 @@ class MainWidget(QMainWindow):
             self.typesetting_visualizer2d()
             self.dock_name.append(image_name)
         else:
-            msg_box = QMessageBox(QMessageBox.Warning, '警告', '222the name is exist, please change the name.')
+            msg_box = QMessageBox(QMessageBox.Warning, 'warning', 'the name is exist, please change the name.')
             msg_box.exec_()
 
     def typesetting_visualizer2d(self):
@@ -304,6 +304,7 @@ class MainWidget(QMainWindow):
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     main = MainWidget()
-    main.showMaximized()
     main.show()
+    main.showMaximized()
+
     app.exec_()

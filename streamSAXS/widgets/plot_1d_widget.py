@@ -138,25 +138,26 @@ class CurvePlot(QWidget):
         self.crosshair = True
         self.log = True
         self.init = True
-
         # ----------------QToolBar---------------------------------------
         self.navbar = QToolBar()
-        self.navbar.setIconSize(QSize(30, 30))
-        self.navbar.setStyleSheet("font-size:25px;")
-        self.navbar.addAction(QIcon(os.getcwd()+'/xrd/ui/icons/button_grid.png'),
-                              "Show grid", self.grid_changed)
-        self.navbar.addAction(QIcon(os.getcwd()+'/xrd/ui/icons/button_big.png'),
-                              "Zoom in", self.plot.vb.set_mode_zooming)
-        self.navbar.addAction(QIcon(os.getcwd()+'/xrd/ui/icons/button_hand.png'),
-                              "move", self.plot.vb.set_mode_panning)
-        self.navbar.addAction(QIcon(os.getcwd()+'/xrd/ui/icons/button_fount.png'),
-                              "auto", self.plot.vb.enableAutoRangeTrue)
-
+        self.navbar.setIconSize(QSize(20, 20))
+        self.navbar.setStyleSheet("font-size:15px;")
+        self.axis_label = QLabel("")
+        self.navbar.addWidget(self.axis_label)
         spacer = QWidget()
         spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.navbar.addWidget(spacer)
-        self.axis_label = QLabel("")
-        self.navbar.addWidget(self.axis_label)
+        self.navbar.addAction(QIcon(os.getcwd()+'/ui/icons/button_grid.png'),
+                              "Show grid", self.grid_changed)
+        self.navbar.addAction(QIcon(os.getcwd()+'/ui/icons/button_big.png'),
+                              "Zoom in", self.plot.vb.set_mode_zooming)
+        self.navbar.addAction(QIcon(os.getcwd()+'/ui/icons/button_hand.png'),
+                              "move", self.plot.vb.set_mode_panning)
+        self.navbar.addAction(QIcon(os.getcwd()+'/ui/icons/button_fount.png'),
+                              "auto", self.plot.vb.enableAutoRangeTrue)
+
+
+
         vbox = QVBoxLayout()
         vbox.setSpacing(0)
         vbox.setContentsMargins(10, 10, 10, 10)
@@ -169,6 +170,8 @@ class CurvePlot(QWidget):
         self.show_grid = False
         self.grid_changed()
         self.class_name_old = None
+        self.x = None
+        self.y = None
 
     def set_log(self):
         self.log = not self.log
@@ -235,6 +238,8 @@ class CurvePlot(QWidget):
                 self.set_line_values(curve_id="default", data=plot["data"]["y"])
             else:
                 self.set_values(curve_id="default", data_x=plot["data"]["x"], data_y=plot["data"]["y"])
+                self.x = plot["data"]["x"]
+                self.y = plot["data"]["y"]
         else:
             for line in plot["data"]:
                 if line["style"] == "Vline":
@@ -243,6 +248,22 @@ class CurvePlot(QWidget):
                     self.set_line_values(curve_id=line["name"], data=line["y"])
                 else:
                     self.set_values(curve_id=line["name"], data_x=line["x"], data_y=line["y"])
+                    self.x = line["x"]
+                    self.y = line["y"]
+    
+    def find_nearest_element(self,arr, target):
+        nearest = arr[0]
+        nearest_index = 0
+        min_diff = abs(nearest - target)
+    
+        for i in range(len(arr)):
+            diff = abs(arr[i] - target)
+            if diff < min_diff:
+                min_diff = diff
+                nearest = arr[i]
+                nearest_index = i
+    
+        return nearest, nearest_index
 
     def set_label(self, location, label, units=None):
         self.plot.setLabel(location, label, units=units)
@@ -258,8 +279,14 @@ class CurvePlot(QWidget):
         if self.plot.vb.sceneBoundingRect().contains(pos):
             mousePoint = self.plot.vb.mapSceneToView(pos)
             posx, posy = mousePoint.x(), mousePoint.y()
-            labels = str(round(posx, 4)) + "   " + str(round(posy, 4))
+            if self.x is not None:
+                nearest_x, nearest_index = self.find_nearest_element(self.x, posx)
+                nearest_y = self.y[nearest_index]
+                labels = str(round(posx, 2)) + " " + str(round(posy, 2))+"    "+str(round(nearest_x, 4))+"  "+str(round(nearest_y, 4))+"  "+str(round(nearest_index, 4))
+            else:
+                labels = str(round(posx, 2)) + "   " + str(round(posy, 2))
             self.axis_label.setText(labels)
+            
 
     def add_curve(self, curve_id, curve_name=None, curve_color=QColor('blue'), curve_style="line", curve_symbol=None,
                   curve_width=1, line_style=Qt.SolidLine):

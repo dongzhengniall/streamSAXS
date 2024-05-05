@@ -12,7 +12,7 @@ class DetectorCalibrationPyFAI(ProcessingFunction):
 
     def __init__(self):
         super().__init__()
-        self._params_dict["calibration_file"] = {"type": "file", "value": "D:/dongzheng/bamboo-saxsCT/cal/waxd.poni", "text": "PyFAI Calibration File",
+        self._params_dict["calibration_file"] = {"type": "file", "value": None, "text": "PyFAI Calibration File",
                                                  "tip": "File extension is '.poni'"}
 
     def run_function(self, data, **kwargs):

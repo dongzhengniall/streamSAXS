@@ -1,7 +1,9 @@
 import fabio
 import h5py
-from filetype import filetype
-# from pyFAI.azimuthalIntegrator import AzimuthalIntegrator
+#from filetype import filetype
+from PIL import Image
+import numpy as np
+
 import base_function as bf
 
 
@@ -35,19 +37,31 @@ class IoFile(object):
     # load tiff and other file in memory
     @staticmethod
     def Load_File_Data(file_name):
-        kind = filetype.guess(file_name)
-        if kind is None:
-            if len(file_name) > 5 and ".poni" == file_name[-5:]:
-                integrator = bf.detectorCalibrationPyfai(file_name)
-                return integrator
-            else:
-                print('Cannot guess file type!')
-                return None
+        
+        data=None
+        
+        if file_name.endswith('.poni'):
+            try:
+                data = bf.detectorCalibrationPyfai(file_name)
+                # data --> integrator
+            except:
+                print("Load poni file false!")
+
+        elif file_name.endswith('.tif') or file_name.endswith('.tiff'):
+            try:
+                data=Image.open(file_name, mode='r')
+                data = np.array(data).astype(np.float32)
+            except:
+                print("Load tif or tiff file false!")
+        elif file_name.endswith('.edf'):
+            try:
+                data=fabio.open(file_name).data.astype(np.float32)
+            except:
+                print("Load edf file false!")
+                
         else:
-            if kind.extension == "tif":
-                tiff_image = None
-                try:
-                    tiff_image = fabio.open(file_name).data.astype("float32")
-                except:
-                    print("load tiff file false!")
-                return tiff_image
+            print('File type is not supproted!')
+
+        return data
+            
+            
