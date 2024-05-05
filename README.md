@@ -18,9 +18,9 @@ BioXTAS RAW <br>
 ## Running Example <br>
 1. Import PeakFit.yaml workflow file <br>
 2. Select input <br>
-   Load 2D Data --> \Example\data <br>
-   Detector Calibration via PyFAI --> \Example\calibration.poni <br>
-   User-defined Mask 2D --> \Example\mask01.tif <br>
+   Load 2D Data --> \example\data\ <br>
+   Detector Calibration via PyFAI --> \example\calibration.poni <br>
+   User-defined Mask 2D --> \example\mask01.tif <br>
 3. Set plot widget <br>
    3.1 Creation <br>
      Default: Plot1d for I(q), Plot1d for I(chi), Plot2d for mapping <br>
