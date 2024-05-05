@@ -36,7 +36,7 @@ BioXTAS RAW <br>
    Single Peak Fitting --> "PeakFit" widget <br>
    Single Peak Fitting Plot --> plot2d widget, set the number of X/Y within plot2d widget <br>
 4. Run the workflow <br>
-<br>
+   
 ## Documentation <br>
 The default components provided by StreamSAXS are listed in file Default Components.txt.<br>
 <br>
