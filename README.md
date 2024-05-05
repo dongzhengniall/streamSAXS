@@ -1,6 +1,8 @@
 # StreamSAXS <br>
 StreamSAXS is a Python-based SAXS/WAXS data analysis workflow platform with GUI. <br>
 ## Installation <br>
+{StreamSAXS runs on Windows currently.} <br>
+<br>
 1.Environment Setup <br>
 `pip install -r requirements.txt` <br>
 <br>
