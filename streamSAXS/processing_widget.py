@@ -466,6 +466,7 @@ class ProcessingWidget(QWidget, Ui_processing_widget):
         main_menu.setMinimumWidth(150)
         add_1d_menu = main_menu.addAction(u"add plot 1d")
         add_2d_menu = main_menu.addAction(u"add image visualizer")
+        add_plot2d_menu = main_menu.addAction(u"add plot 2d")
         if "row_num" in dir() and row_num < self.steps_tablewidget.rowCount() - 1:
             # select input number
             if row_num > 0:
@@ -511,13 +512,17 @@ class ProcessingWidget(QWidget, Ui_processing_widget):
                 select_output_menu.setMenu(select_widget_menu)
         action = main_menu.exec_(self.steps_tablewidget.mapToGlobal(pos))
         if action == add_1d_menu:
-            text, ok = QInputDialog.getText(self, '设置窗口', '请输入一维图名：')
+            text, ok = QInputDialog.getText(self, 'Setting Window', 'Please input a name for the plot 1d：')
             if ok:
                 self.signal_add_plot1d.emit(text)
         elif action == add_2d_menu:
-            text, ok = QInputDialog.getText(self, '设置窗口', '请输入二维图名：')
+            text, ok = QInputDialog.getText(self, 'Setting Window', 'Please input a name for the visualizer 2d:')
             if ok:
                 self.signal_add_visualizer2d.emit(text)
+        elif action == add_plot2d_menu:
+            text, ok = QInputDialog.getText(self, 'Setting Window', 'Please input a name for the plot 2d:')
+            if ok:
+                self.signal_add_plot2d.emit(text)
         else:
             return
 

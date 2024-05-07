@@ -95,7 +95,7 @@ class Plot2DWidget(QWidget):
         self.navbar.addWidget(spacer)
         self.axis_label = QLabel("")
         self.navbar.addWidget(self.axis_label)
-
+        self.navbar.setStyleSheet("font-size:15px;")
         self.layout.addWidget(self.navbar)
         self.layout.addWidget(self.win)
 
@@ -111,9 +111,9 @@ class Plot2DWidget(QWidget):
         if self.p1.vb.sceneBoundingRect().contains(pos):
             mousePoint = self.p1.vb.mapSceneToView(pos)
             posx, posy = mousePoint.x(), mousePoint.y()
-            if self.data is not None and int(posy) < self.data.shape[0] and int(posx) < self.data.shape[1]:
+            if self.data is not None and int(posy) < self.data.shape[1] and int(posx) < self.data.shape[0]:
                 labels = "pixel:x=" + str(round(posx)) + " y=" + str(round(posy)) + "    gray:" + str(
-                    self.image[int(posy), int(posx)])
+                    self.data[int(posx), int(posy)])
             else:
                 labels = "pixel:x=" + str(round(posx)) + " y=" + str(round(posy))
             self.axis_label.setText(labels)

@@ -206,6 +206,7 @@ class MainWidget(QMainWindow):
             self.processing_operate_widget.processing_widget.plot2d_widget_dict = self.plot2d_widget_dict
             self.typesetting_plot1d()
             self.typesetting_visualizer2d()
+            self.typesetting_plot2d()
             self.dock_name.append(image_name)
         else:
             msg_box = QMessageBox(QMessageBox.Warning, 'warning', 'The name is exist, please change the name.')
@@ -226,9 +227,10 @@ class MainWidget(QMainWindow):
             self.processing_operate_widget.processing_widget.plot1d_widget_dict = self.plot1d_widget_dict
             self.typesetting_plot1d()
             self.typesetting_visualizer2d()
+            self.typesetting_plot2d()
             self.dock_name.append(image_name)
         else:
-            msg_box = QMessageBox(QMessageBox.Warning, 'warning', '111the name is exist, please change the name.')
+            msg_box = QMessageBox(QMessageBox.Warning, 'warning', 'the name is exist, please change the name.')
             msg_box.exec_()
 
     def typesetting_plot1d(self):
@@ -258,14 +260,16 @@ class MainWidget(QMainWindow):
             self.visualizer2d_dock_dict[uid] = dock
             self.visualizer2d_dock_dict[uid]["dock"].setWidget(self.visualizer2d_widget_dict[uid]["widget"])
             self.processing_operate_widget.processing_widget.visualizer2d_widget_dict = self.visualizer2d_widget_dict
+            self.typesetting_plot1d()
             self.typesetting_visualizer2d()
+            self.typesetting_plot2d()
             self.dock_name.append(image_name)
         else:
             msg_box = QMessageBox(QMessageBox.Warning, 'warning', 'the name is exist, please change the name.')
             msg_box.exec_()
 
     def typesetting_visualizer2d(self):
-        column = 2
+        column = 1
         i = 0
         first_dock = None
         last_dock = None
@@ -283,7 +287,7 @@ class MainWidget(QMainWindow):
             i = i + 1
 
     def typesetting_plot2d(self):
-        column = 2
+        column = 1
         i = 0
         first_dock = None
         last_dock = None

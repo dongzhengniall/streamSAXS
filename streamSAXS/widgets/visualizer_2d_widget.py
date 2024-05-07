@@ -95,6 +95,7 @@ class Visualizer2DWidget(QWidget):
         self.navbar.addWidget(spacer)
         self.axis_label = QLabel("")
         self.navbar.addWidget(self.axis_label)
+        self.navbar.setStyleSheet("font-size:15px;")
 
         self.navbar.actionTriggered[QAction].connect(self.navbar_triggered)
         self.layout.addWidget(self.navbar)
