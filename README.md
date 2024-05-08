@@ -18,15 +18,15 @@ BioXTAS RAW <br>
 -->https://bioxtas-raw.readthedocs.io/en/latest/install.html <br>
 <br>
 3. Download the StreamSAXS project, run main.py <br>
-[\streamSAXS\examples\ contains data files that may slow down the download speed. <br>
-&emsp;These folder is provided for familiarizing users with the operating procedures and is unnecessary for running the project.] <br>
+(\examples\ contains data files that may slow down the download speed. <br>
+&emsp;These folder is provided for familiarizing users with the operating procedures and is unnecessary for running the project.) <br>
 <br>
 ## Running Example <br>
-1. Import workflow file --> \streamSAXS\examples\PeakFit.yaml <br>
+1. Import workflow file --> \examples\PeakFit.yaml <br>
 2. Select input <br>
-   Load 2D Data -->  \streamSAXS\examples\data\  <br>
-   Detector Calibration via PyFAI --> \streamSAXS\examples\calibration.poni <br>
-   User-defined Mask 2D --> \streamSAXS\examples\mask01.tif <br>
+   Load 2D Data -->  \examples\data\  <br>
+   Detector Calibration via PyFAI --> \examples\calibration.poni <br>
+   User-defined Mask 2D --> \examples\mask01.tif <br>
 3. Set plot widget <br>
    3.1 Creation <br>
      Default: Plot1d for I(q), Plot1d for I(chi), Plot2d for mapping <br>
