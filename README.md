@@ -17,7 +17,9 @@ BioXTAS RAW <br>
 -->Directly copy the bioxtasraw source folder <br>
 -->https://bioxtas-raw.readthedocs.io/en/latest/install.html <br>
 <br>
-3. Download the whole StreamSAXS project, run main.py <br>
+3. Download the StreamSAXS project, run main.py <br>
+[\streamSAXS\examples\ contains data files that may slow down the download speed. <br>
+&emsp;These folder is provided for familiarizing users with the operating procedures and is unnecessary for running the project.] <br>
 <br>
 ## Running Example <br>
 1. Import workflow file --> \streamSAXS\examples\PeakFit.yaml <br>
