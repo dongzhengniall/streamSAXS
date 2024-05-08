@@ -17,10 +17,14 @@ BioXTAS RAW <br>
 -->Directly copy the bioxtasraw source folder <br>
 -->https://bioxtas-raw.readthedocs.io/en/latest/install.html <br>
 <br>
+3. Download the StreamSAXS project, run main.py <br>
+[\streamSAXS\examples\ contains data files that may slow down the download speed. <br>
+&emsp;These folder is provided for familiarizing users with the operating procedures and is unnecessary for running the project.] <br>
+<br>
 ## Running Example <br>
 1. Import workflow file --> \streamSAXS\examples\PeakFit.yaml <br>
 2. Select input <br>
-   Load 2D Data --> https://9d353bdf5d.znas.cn/AppH5/share/nid=LIYDIMJQGEYDESRSJY2TS&code=N5m3y1pGYdJbkfproTI2M3f7EpI6yncs71Qm3sw4OPcxrIEsDm20MctS4JQee8CoVm2o&mode=file&display=list (will be shortly uploaded to \streamSAXS\examples\data\ ) <br>
+   Load 2D Data -->  \streamSAXS\examples\data\  <br>
    Detector Calibration via PyFAI --> \streamSAXS\examples\calibration.poni <br>
    User-defined Mask 2D --> \streamSAXS\examples\mask01.tif <br>
 3. Set plot widget <br>
